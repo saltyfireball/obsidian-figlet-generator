@@ -1,0 +1,25 @@
+{
+	"name": "obsidian-figlet-generator",
+	"version": "1.0.0",
+	"description": "Generate and display ASCII art text using Figlet fonts in Obsidian.",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
+	},
+	"keywords": ["obsidian", "plugin", "figlet", "ascii", "art", "font"],
+	"license": "MIT",
+	"devDependencies": {
+		"@types/figlet": "^1.7.0",
+		"@types/node": "^16.11.6",
+		"esbuild": "0.25.5",
+		"tslib": "2.4.0",
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"figlet": "^1.10.0",
+		"obsidian": "latest"
+	}
+}

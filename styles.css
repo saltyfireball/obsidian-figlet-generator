@@ -1,0 +1,381 @@
+/* Figlet Generator Plugin - styles.css */
+
+/* ===== Modal ===== */
+
+.fg-figlet-modal {
+	max-width: 640px;
+}
+
+.fg-figlet-modal h2 {
+	margin-bottom: 1em;
+}
+
+.fg-figlet-input-row,
+.fg-figlet-color-row,
+.fg-figlet-font-row,
+.fg-figlet-preview-row {
+	margin-bottom: 1em;
+}
+
+.fg-figlet-input-row label,
+.fg-figlet-color-row label,
+.fg-figlet-font-row label,
+.fg-figlet-preview-row label {
+	display: block;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	margin-bottom: 6px;
+}
+
+.fg-figlet-text-input {
+	width: 100%;
+	padding: 10px 12px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+}
+
+.fg-figlet-text-input:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+/* Color Grid */
+.fg-figlet-color-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.fg-figlet-color-swatch {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	border: 2px solid transparent;
+	cursor: pointer;
+	transition:
+		transform 0.1s,
+		border-color 0.1s;
+}
+
+.fg-figlet-color-swatch:hover {
+	transform: scale(1.1);
+}
+
+.fg-figlet-color-swatch.is-active {
+	border-color: var(--interactive-accent);
+	box-shadow:
+		0 0 0 2px var(--background-primary),
+		0 0 0 4px var(--interactive-accent);
+}
+
+.fg-figlet-no-color {
+	background: var(--background-secondary);
+	border: 2px dashed var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	color: var(--text-muted);
+}
+
+/* Font Select */
+.fg-figlet-font-select {
+	width: 100%;
+	min-height: 42px;
+	padding: 10px 12px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	padding-right: 36px;
+}
+
+.fg-figlet-font-select:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+.fg-figlet-font-select option,
+.fg-figlet-font-select optgroup {
+	padding: 8px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.fg-figlet-font-select optgroup {
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+/* Preview */
+.fg-figlet-preview {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 12px;
+	max-height: 200px;
+	overflow: auto;
+}
+
+.fg-figlet-preview pre {
+	margin: 0;
+	font-family: var(--font-monospace);
+	font-size: 10px;
+	line-height: 1.2;
+	white-space: pre;
+	overflow-x: auto;
+}
+
+/* ===== Settings Page ===== */
+
+.fg-figlet-search {
+	width: 100%;
+	padding: 10px 12px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+	margin-bottom: 1em;
+}
+
+.fg-figlet-search:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+.fg-figlet-font-list {
+	max-height: 400px;
+	overflow-y: auto;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 4px;
+}
+
+.fg-figlet-font-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.1s;
+}
+
+.fg-figlet-font-item:hover {
+	background: var(--background-secondary);
+}
+
+.fg-figlet-font-star {
+	width: 24px;
+	height: 24px;
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-size: 18px;
+	color: var(--text-muted);
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.fg-figlet-font-star:hover {
+	color: var(--text-accent);
+}
+
+.fg-figlet-font-star.is-favorite {
+	color: var(--text-accent);
+}
+
+.fg-figlet-font-name {
+	flex: 1;
+	font-size: 14px;
+}
+
+.fg-figlet-empty {
+	padding: 2em;
+	text-align: center;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* ===== Display in Notes (keep sfb- prefix unchanged) ===== */
+
+.sfb-figlet-display {
+	display: flex;
+	justify-content: center;
+	padding: 5px 0;
+	overflow: visible;
+}
+
+.sfb-figlet-display.sfb-figlet-left {
+	justify-content: flex-start;
+}
+
+.sfb-figlet-display pre {
+	margin: 0;
+	padding: 5px 0;
+	background-color: transparent;
+	border: none;
+	font-family: monospace;
+	font-size: 10px;
+	line-height: 1;
+	white-space: pre;
+	display: inline-block;
+	overflow: visible;
+}
+
+/* Gradient/rainbow mode uses inline colored spans - no special CSS needed */
+
+.sfb-figlet-error {
+	color: var(--text-error);
+	font-style: italic;
+	padding: 8px;
+}
+
+.sfb-figlet-loading {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 8px;
+}
+
+/* ===== Settings Page - Examples & Documentation ===== */
+
+.fg-figlet-example {
+	margin: 12px 0;
+}
+
+.fg-figlet-code-example {
+	background: var(--background-secondary);
+	padding: 12px;
+	border-radius: 6px;
+	overflow-x: auto;
+}
+
+.fg-figlet-code-example code {
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	white-space: pre;
+}
+
+.fg-figlet-code-wrapper {
+	position: relative;
+	margin-bottom: 12px;
+}
+
+.fg-figlet-code-wrapper .fg-figlet-code-example {
+	margin: 0;
+	padding-right: 60px;
+}
+
+.fg-figlet-copy-btn {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	padding: 4px 10px;
+	font-size: 12px;
+	background: var(--background-modifier-border);
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 0.15s ease;
+}
+
+.fg-figlet-code-wrapper:hover .fg-figlet-copy-btn {
+	opacity: 1;
+}
+
+.fg-figlet-copy-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.fg-figlet-options-table {
+	margin: 16px 0;
+}
+
+.fg-figlet-options-table h4 {
+	margin-bottom: 8px;
+}
+
+.fg-figlet-options-table table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.fg-figlet-options-table th,
+.fg-figlet-options-table td {
+	padding: 8px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.fg-figlet-options-table th {
+	background: var(--background-secondary);
+	font-weight: 600;
+}
+
+.fg-figlet-options-table .fg-code {
+	font-family: var(--font-monospace);
+	background: var(--background-secondary);
+	padding: 2px 6px;
+	border-radius: 4px;
+}
+
+/* Gradient preview in settings */
+.fg-figlet-gradient-preview {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 12px;
+	padding: 8px;
+	background: var(--background-secondary);
+	border-radius: 6px;
+}
+
+.fg-figlet-gradient-swatch {
+	width: 28px;
+	height: 28px;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+
+.fg-figlet-reset-gradient-btn {
+	margin-top: 8px;
+}
+
+/* ===== Modal Actions ===== */
+
+.fg-modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 1.5em;
+	padding-top: 1em;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* ===== Hint Styles ===== */
+
+.fg-hint {
+	color: var(--text-muted);
+	font-size: 0.85em;
+	font-style: italic;
+}
+
+.fg-figlet-hint {
+	font-size: 0.8em;
+	color: var(--text-muted);
+	margin-bottom: 6px;
+}
