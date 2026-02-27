@@ -20,30 +20,30 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	}
 
 	const section = contentEl.createDiv("fg-figlet-section");
-	new Setting(section).setName("Figlet generator settings").setHeading();
+	new Setting(section).setName("Figlet generator").setHeading();
 
 	// Code Block ID Setting
 	new Setting(section).setName("Code block").setHeading();
 
 	new Setting(section)
 		.setName("Code block language ID")
-		.setDesc("The language identifier for figlet code blocks (e.g. sfb-figlet). Changing this requires a plugin reload.")
+		.setDesc("The language identifier for figlet code blocks, such as sfb-figlet. Changing this requires a plugin reload.")
 		.addText((text) => {
 			text
-				.setPlaceholder("sfb-figlet")
+				.setPlaceholder("Enter block ID")
 				.setValue(plugin.settings.codeBlockId ?? "sfb-figlet")
-				.onChange(async (value) => {
+				.onChange((value) => {
 					const trimmed = value.trim();
 					if (trimmed.length > 0) {
 						plugin.settings.codeBlockId = trimmed;
-						await plugin.saveSettings();
+						void plugin.saveSettings();
 					}
 				});
-			text.inputEl.style.width = "200px";
+			text.inputEl.setCssStyles({ width: "200px" });
 		});
 
 	// Display Settings Section
-	new Setting(section).setName("Display settings").setHeading();
+	new Setting(section).setName("Display").setHeading();
 
 	new Setting(section)
 		.setName("Font size")
@@ -52,17 +52,17 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 			text
 				.setPlaceholder("10")
 				.setValue(String(plugin.settings.fontSize ?? 10))
-				.onChange(async (value) => {
+				.onChange((value) => {
 					const num = parseFloat(value);
 					if (!isNaN(num) && num > 0) {
 						plugin.settings.fontSize = num;
-						await plugin.saveSettings();
+						void plugin.saveSettings();
 					}
 				});
 			text.inputEl.type = "number";
 			text.inputEl.min = "1";
 			text.inputEl.max = "100";
-			text.inputEl.style.width = "80px";
+			text.inputEl.setCssStyles({ width: "80px" });
 		});
 
 	new Setting(section)
@@ -72,18 +72,18 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 			text
 				.setPlaceholder("1")
 				.setValue(String(plugin.settings.lineHeight ?? 1))
-				.onChange(async (value) => {
+				.onChange((value) => {
 					const num = parseFloat(value);
 					if (!isNaN(num) && num > 0) {
 						plugin.settings.lineHeight = num;
-						await plugin.saveSettings();
+						void plugin.saveSettings();
 					}
 				});
 			text.inputEl.type = "number";
 			text.inputEl.min = "0.5";
 			text.inputEl.max = "3";
 			text.inputEl.step = "0.1";
-			text.inputEl.style.width = "80px";
+			text.inputEl.setCssStyles({ width: "80px" });
 		});
 
 	new Setting(section)
@@ -92,9 +92,9 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		.addToggle((toggle) => {
 			toggle
 				.setValue(plugin.settings.centered ?? true)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					plugin.settings.centered = value;
-					await plugin.saveSettings();
+					void plugin.saveSettings();
 				});
 		});
 
@@ -114,7 +114,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		colorPreviewRow.empty();
 		colors.forEach((color) => {
 			const swatch = colorPreviewRow.createEl("span", { cls: "fg-figlet-gradient-swatch" });
-			swatch.style.backgroundColor = color;
+			swatch.setCssStyles({ backgroundColor: color });
 		});
 	};
 
@@ -128,28 +128,27 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		.addTextArea((text) => {
 			gradientTextArea = text.inputEl;
 			text
-				.setPlaceholder("#FF6188 #FC9867 #FFD866 ...")
+				.setPlaceholder("#ff6188 #fc9867 #ffd866 ...")
 				.setValue(gradientColors.join(" "))
-				.onChange(async (value) => {
+				.onChange((value) => {
 					const colors = value.split(/\s+/).filter((c) => c.trim().length > 0);
 					if (colors.length > 0) {
 						plugin.settings.gradientColors = colors;
-						await plugin.saveSettings();
+						void plugin.saveSettings();
 						updatePreviewSwatches(colors);
 					}
 				});
 			text.inputEl.rows = 2;
-			text.inputEl.style.width = "100%";
-			text.inputEl.style.fontFamily = "var(--font-monospace)";
+			text.inputEl.setCssStyles({ width: "100%", fontFamily: "var(--font-monospace)" });
 		});
 
 	const resetGradientBtn = section.createEl("button", {
-		text: "Reset to Default Colors",
+		text: "Reset to default colors",
 		cls: "fg-figlet-reset-gradient-btn",
 	});
-	resetGradientBtn.addEventListener("click", async () => {
+	resetGradientBtn.addEventListener("click", () => {
 		plugin.settings.gradientColors = [...DEFAULT_GRADIENT_COLORS];
-		await plugin.saveSettings();
+		void plugin.saveSettings();
 		gradientTextArea.value = DEFAULT_GRADIENT_COLORS.join(" ");
 		updatePreviewSwatches(DEFAULT_GRADIENT_COLORS);
 	});
@@ -175,13 +174,13 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 			attr: { type: "button", title: "Copy to clipboard" },
 		});
 		copyBtn.textContent = "Copy";
-		copyBtn.addEventListener("click", async () => {
+		copyBtn.addEventListener("click", () => { void (async () => {
 			await navigator.clipboard.writeText(code);
 			copyBtn.textContent = "Copied!";
 			setTimeout(() => {
 				copyBtn.textContent = "Copy";
 			}, 1500);
-		});
+		})(); });
 	};
 
 	createCopyableExample(`\`\`\`${codeBlockId}\nfont: Banner\ncolor: #5C7CFA\n---\nHello World\n\`\`\``);
@@ -238,22 +237,22 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	const actionsRow = section.createDiv("fg-figlet-actions-row");
 
 	const resetBtn = actionsRow.createEl("button", {
-		text: "Reset to Defaults",
+		text: "Reset to defaults",
 		cls: "fg-figlet-reset-btn",
 	});
-	resetBtn.addEventListener("click", async () => {
+	resetBtn.addEventListener("click", () => {
 		plugin.settings.favoriteFonts = [...DEFAULT_FAVORITE_FONTS];
-		await plugin.saveSettings();
+		void plugin.saveSettings();
 		renderFigletTab({ plugin, contentEl });
 	});
 
 	const clearBtn = actionsRow.createEl("button", {
-		text: "Clear All Favorites",
+		text: "Clear all favorites",
 		cls: "fg-figlet-clear-btn",
 	});
-	clearBtn.addEventListener("click", async () => {
+	clearBtn.addEventListener("click", () => {
 		plugin.settings.favoriteFonts = [];
-		await plugin.saveSettings();
+		void plugin.saveSettings();
 		renderFigletTab({ plugin, contentEl });
 	});
 
@@ -262,7 +261,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		type: "text",
 		placeholder: "Search fonts...",
 		cls: "fg-figlet-search-input",
-	}) as HTMLInputElement;
+	});
 
 	const countEl = section.createDiv("fg-figlet-count");
 
@@ -333,7 +332,7 @@ function createFontItem(
 	});
 	starBtn.textContent = isFavorite ? "(*)" : "( )";
 
-	starBtn.addEventListener("click", async () => {
+	starBtn.addEventListener("click", () => {
 		const favorites = plugin.settings.favoriteFonts || [];
 		if (isFavorite) {
 			plugin.settings.favoriteFonts = favorites.filter((f) => f !== font);
@@ -342,7 +341,7 @@ function createFontItem(
 				plugin.settings.favoriteFonts = [...favorites, font];
 			}
 		}
-		await plugin.saveSettings();
+		void plugin.saveSettings();
 		updateCount();
 		renderFontList(searchInput.value);
 	});

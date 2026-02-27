@@ -31,7 +31,7 @@ export class FigletModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass("fg-figlet-modal");
 
-		contentEl.createEl("h2", { text: "Figlet Font Generator" });
+		contentEl.createEl("h2", { text: "Figlet font generator" });
 
 		// Text input
 		const textRow = contentEl.createDiv("fg-figlet-input-row");
@@ -41,7 +41,7 @@ export class FigletModal extends Modal {
 			value: this.initialText,
 			placeholder: "Enter text to convert...",
 			cls: "fg-figlet-text-input",
-		}) as HTMLInputElement;
+		});
 
 		// Color input (simple text field instead of palette grid)
 		const colorRow = contentEl.createDiv("fg-figlet-input-row");
@@ -49,17 +49,17 @@ export class FigletModal extends Modal {
 		const colorDesc = colorRow.createEl("div", {
 			cls: "fg-figlet-hint",
 		});
-		colorDesc.textContent = "Hex (#FF6188), CSS name (red), or 'rainbow' for gradient. Leave empty for default.";
+		colorDesc.textContent = "Hex (#ff6188), CSS name (red), or 'rainbow' for gradient. Leave empty for default";
 		let selectedColor = this.plugin.settings.lastUsedColor || "";
 		const colorInput = colorRow.createEl("input", {
 			type: "text",
 			value: selectedColor,
 			placeholder: "#FF6188 or rainbow",
 			cls: "fg-figlet-text-input",
-		}) as HTMLInputElement;
+		});
 		colorInput.addEventListener("input", () => {
 			selectedColor = colorInput.value.trim();
-			updatePreview();
+			void updatePreview();
 		});
 
 		// Font selection
@@ -67,7 +67,7 @@ export class FigletModal extends Modal {
 		fontRow.createEl("label", { text: "Font" });
 		const fontSelect = fontRow.createEl("select", {
 			cls: "fg-figlet-font-select",
-		}) as HTMLSelectElement;
+		});
 
 		// Get favorites and sort fonts
 		const favorites = this.plugin.settings.favoriteFonts || [];
@@ -104,26 +104,26 @@ export class FigletModal extends Modal {
 
 			if (!text) {
 				previewPre.textContent = "(enter text above)";
-				previewPre.style.color = "";
+				previewPre.setCssStyles({ color: "" });
 				return;
 			}
 
 			try {
 				const figletText = await generateFigletText(text, font);
 				previewPre.textContent = figletText;
-				previewPre.style.color = selectedColor || "";
-			} catch (err) {
+				previewPre.setCssStyles({ color: selectedColor || "" });
+			} catch {
 				previewPre.textContent = `Error: Font "${font}" may not be available`;
-				previewPre.style.color = "var(--text-error)";
+				previewPre.setCssStyles({ color: "var(--text-error)" });
 			}
 		};
 
 		// Event listeners for preview updates
-		textInput.addEventListener("input", updatePreview);
-		fontSelect.addEventListener("change", updatePreview);
+		textInput.addEventListener("input", () => { void updatePreview(); });
+		fontSelect.addEventListener("change", () => { void updatePreview(); });
 
 		// Initial preview
-		updatePreview();
+		void updatePreview();
 
 		// Action buttons
 		const actions = contentEl.createDiv("fg-modal-actions");
@@ -136,7 +136,7 @@ export class FigletModal extends Modal {
 			cls: "mod-cta",
 		});
 
-		insertBtn.addEventListener("click", async () => {
+		insertBtn.addEventListener("click", () => { void (async () => {
 			const text = textInput.value.trim();
 			const font = fontSelect.value;
 
@@ -173,9 +173,9 @@ export class FigletModal extends Modal {
 
 				this.close();
 			} catch (err) {
-				new Notice(`Failed to generate figlet text: ${err}`);
+				new Notice(`Failed to generate figlet text: ${String(err)}`);
 			}
-		});
+		})(); });
 	}
 
 	onClose() {
