@@ -20,10 +20,10 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	}
 
 	const section = contentEl.createDiv("fg-figlet-section");
-	section.createEl("h2", { text: "Figlet Generator Settings" });
+	new Setting(section).setName("Figlet generator settings").setHeading();
 
 	// Code Block ID Setting
-	section.createEl("h3", { text: "Code Block" });
+	new Setting(section).setName("Code block").setHeading();
 
 	new Setting(section)
 		.setName("Code block language ID")
@@ -43,7 +43,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		});
 
 	// Display Settings Section
-	section.createEl("h3", { text: "Display Settings" });
+	new Setting(section).setName("Display settings").setHeading();
 
 	new Setting(section)
 		.setName("Font size")
@@ -99,7 +99,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		});
 
 	// Gradient Colors Section
-	section.createEl("h3", { text: "Rainbow / Gradient Colors" });
+	new Setting(section).setName("Rainbow / gradient colors").setHeading();
 	section.createEl("p", {
 		text: "Colors used when 'color: rainbow' is set, or when using the 'colors:' option.",
 		cls: "fg-hint",
@@ -157,7 +157,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	// Code Block Example Section
 	const codeBlockId = plugin.settings.codeBlockId ?? "sfb-figlet";
 
-	section.createEl("h3", { text: "Code Block Usage" });
+	new Setting(section).setName("Code block usage").setHeading();
 	section.createEl("p", {
 		text: `Use ${codeBlockId} code blocks to render ASCII art inline in your notes:`,
 		cls: "fg-hint",
@@ -203,7 +203,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	createCopyableExample(`\`\`\`${codeBlockId}\nfont: Thick\ncolor: rainbow\nmulti-center: true\n---\nLinux\nCommands\n\`\`\``);
 
 	const optionsTable = section.createDiv("fg-figlet-options-table");
-	optionsTable.createEl("h4", { text: "Available Options" });
+	new Setting(optionsTable).setName("Available options").setHeading();
 	const table = optionsTable.createEl("table");
 	const headerRow = table.createEl("tr");
 	headerRow.createEl("th", { text: "Option" });
@@ -229,7 +229,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	});
 
 	// Favorites Section
-	section.createEl("h3", { text: "Favorite Fonts" });
+	new Setting(section).setName("Favorite fonts").setHeading();
 	section.createEl("p", {
 		text: "Favorites appear at the top of the font list when generating ASCII art.",
 		cls: "fg-hint",
