@@ -150,8 +150,9 @@ async function loadFont(fontName: string): Promise<boolean> {
  * Unload all fonts from memory
  */
 function unloadFonts(): void {
-	if (typeof (figletLib as any).clearLoadedFonts === "function") {
-		(figletLib as any).clearLoadedFonts();
+	const lib = figletLib as unknown as Record<string, unknown>;
+	if (typeof lib.clearLoadedFonts === "function") {
+		(lib.clearLoadedFonts as () => void)();
 	}
 }
 
@@ -229,9 +230,10 @@ export async function generateFigletText(
 	}
 
 	return new Promise((resolve, reject) => {
-		figletLib.text(
+		void figletLib.text(
 			text,
-			{ font: font as any },
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- figlet Fonts type mismatch
+			{ font: font as figletLib.Fonts },
 			(err: Error | null, result: string | undefined) => {
 				// Unload fonts after generation to free memory
 				unloadFonts();
@@ -269,15 +271,15 @@ function interpolateColor(color1: string, color2: string, factor: number): strin
  * Get color at position along gradient
  */
 function getGradientColor(colors: string[], position: number): string {
-	if (colors.length === 1) return colors[0]!;
-	if (position <= 0) return colors[0]!;
-	if (position >= 1) return colors[colors.length - 1]!;
+	if (colors.length === 1) return colors[0];
+	if (position <= 0) return colors[0];
+	if (position >= 1) return colors[colors.length - 1];
 
 	const scaledPos = position * (colors.length - 1);
 	const index = Math.floor(scaledPos);
 	const factor = scaledPos - index;
 
-	return interpolateColor(colors[index]!, colors[index + 1]!, factor);
+	return interpolateColor(colors[index], colors[index + 1], factor);
 }
 
 /**
@@ -314,7 +316,7 @@ function createGradientHtml(
 		let currentChars = "";
 
 		for (let i = 0; i < line.length; i++) {
-			const char = line[i]!;
+			const char = line[i];
 			// Calculate position along gradient (0 to 1)
 			const position = maxLineLength > 1 ? i / (maxLineLength - 1) : 0;
 			const color = getGradientColor(colors, position);

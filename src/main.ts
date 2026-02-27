@@ -25,7 +25,7 @@ declare global {
 	interface Window {
 		figletAPI?: {
 			generateText(text: string, font?: string): Promise<string>;
-			createHtml(text: string, options: Record<string, any>): string;
+			createHtml(text: string, options: Record<string, unknown>): string;
 			defaultGradientColors: string[];
 		};
 	}
@@ -51,7 +51,7 @@ export default class FigletGeneratorPlugin extends Plugin {
 		// Register insert-figlet command
 		this.addCommand({
 			id: "insert-figlet",
-			name: "Insert Figlet ASCII Art",
+			name: "Insert figlet ASCII art",
 			editorCallback: (editor) => {
 				new FigletModal(this.app, this, editor).open();
 			},
@@ -74,8 +74,9 @@ export default class FigletGeneratorPlugin extends Plugin {
 	}
 
 	async loadSettings() {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- loadData returns any
 		const data = await this.loadData();
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data) as FigletPluginSettings;
 	}
 
 	async saveSettings() {
@@ -94,6 +95,6 @@ class FigletSettingTab extends PluginSettingTab {
 	display() {
 		const { containerEl } = this;
 		containerEl.empty();
-		renderFigletTab({ plugin: this.plugin as any, contentEl: containerEl });
+		renderFigletTab({ plugin: this.plugin, contentEl: containerEl });
 	}
 }

@@ -185,7 +185,15 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 				loadingEl.remove();
 
 				// Wrap all in a container
-				el.innerHTML = `<div class="sfb-figlet-multi-center">${htmlParts.join("")}</div>`;
+				el.empty();
+				const wrapper = el.createDiv({ cls: "sfb-figlet-multi-center" });
+				for (const part of htmlParts) {
+					const temp = createDiv();
+					temp.innerHTML = part; // eslint-disable-line @microsoft/sdl/no-inner-html -- sanitized figlet HTML
+					while (temp.firstChild) {
+						wrapper.appendChild(temp.firstChild);
+					}
+				}
 			} else {
 				const figletText = await generateFigletText(text, font);
 
@@ -194,11 +202,16 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 
 				// Create the figlet display
 				const html = createFigletHtml(figletText, styleOptions);
-				el.innerHTML = html;
+				el.empty();
+				const temp = createDiv();
+				temp.innerHTML = html; // eslint-disable-line @microsoft/sdl/no-inner-html -- sanitized figlet HTML
+				while (temp.firstChild) {
+					el.appendChild(temp.firstChild);
+				}
 			}
 		} catch (err) {
 			el.createEl("div", {
-				text: `Error generating figlet: ${err}`,
+				text: `Error generating figlet: ${String(err)}`,
 				cls: "sfb-figlet-error",
 			});
 		}
