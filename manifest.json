@@ -1,7 +1,7 @@
 {
 	"id": "figlet-generator",
 	"name": "Figlet Generator",
-	"version": "1.0.2",
+	"version": "1.1.0",
 	"minAppVersion": "1.0.0",
 	"description": "Generate and display ASCII art text using Figlet fonts. Supports 280+ fonts, gradient colors, code blocks, and a cross-plugin API.",
 	"author": "saltyfireball",
