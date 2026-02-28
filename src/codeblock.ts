@@ -188,10 +188,12 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 				el.empty();
 				const wrapper = el.createDiv({ cls: "sfb-figlet-multi-center" });
 				for (const part of htmlParts) {
-					const temp = createDiv();
-					temp.innerHTML = part; // eslint-disable-line @microsoft/sdl/no-inner-html -- sanitized figlet HTML
-					while (temp.firstChild) {
-						wrapper.appendChild(temp.firstChild);
+					const parsed = new DOMParser().parseFromString(`<div>${part}</div>`, "text/html");
+					const nodes = parsed.body.firstElementChild?.childNodes;
+					if (nodes) {
+						for (const node of Array.from(nodes)) {
+							wrapper.appendChild(document.importNode(node, true));
+						}
 					}
 				}
 			} else {
@@ -203,10 +205,12 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 				// Create the figlet display
 				const html = createFigletHtml(figletText, styleOptions);
 				el.empty();
-				const temp = createDiv();
-				temp.innerHTML = html; // eslint-disable-line @microsoft/sdl/no-inner-html -- sanitized figlet HTML
-				while (temp.firstChild) {
-					el.appendChild(temp.firstChild);
+				const parsed = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
+				const nodes = parsed.body.firstElementChild?.childNodes;
+				if (nodes) {
+					for (const node of Array.from(nodes)) {
+						el.appendChild(document.importNode(node, true));
+					}
 				}
 			}
 		} catch (err) {

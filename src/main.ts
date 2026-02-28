@@ -74,9 +74,8 @@ export default class FigletGeneratorPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- loadData returns any
-		const data = await this.loadData();
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, data) as FigletPluginSettings;
+		const data = (await this.loadData()) as Partial<FigletPluginSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data ?? {});
 	}
 
 	async saveSettings() {

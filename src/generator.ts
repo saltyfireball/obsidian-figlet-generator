@@ -230,10 +230,10 @@ export async function generateFigletText(
 	}
 
 	return new Promise((resolve, reject) => {
-		void figletLib.text(
+		const opts: { font: string } = { font };
+		void (figletLib.text as (txt: string, options: { font: string }, cb: (err: Error | null, result?: string) => void) => void)(
 			text,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- figlet Fonts type mismatch
-			{ font: font as figletLib.Fonts },
+			opts,
 			(err: Error | null, result: string | undefined) => {
 				// Unload fonts after generation to free memory
 				unloadFonts();
