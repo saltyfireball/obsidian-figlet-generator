@@ -14,6 +14,8 @@ export interface FigletModalPlugin {
 	saveSettings(): Promise<void>;
 }
 
+type OutputMode = "html" | "codeblock";
+
 export class FigletModal extends Modal {
 	private plugin: FigletModalPlugin;
 	private editor: Editor;
@@ -43,7 +45,7 @@ export class FigletModal extends Modal {
 			cls: "fg-figlet-text-input",
 		});
 
-		// Color input (simple text field instead of palette grid)
+		// Color input
 		const colorRow = contentEl.createDiv("fg-figlet-input-row");
 		colorRow.createEl("label", { text: "Color" });
 		const colorDesc = colorRow.createEl("div", {
@@ -91,30 +93,70 @@ export class FigletModal extends Modal {
 		// Set initial selection
 		fontSelect.value = lastUsedFont;
 
-		// Preview area
+		// Output mode toggle
+		const modeRow = contentEl.createDiv("fg-figlet-input-row");
+		modeRow.createEl("label", { text: "Output" });
+		const modeContainer = modeRow.createDiv("fg-figlet-mode-toggle");
+		let outputMode: OutputMode = "codeblock";
+
+		const codeblockBtn = modeContainer.createEl("button", {
+			text: "Code block",
+			cls: "fg-mode-btn fg-mode-active",
+		});
+		const htmlBtn = modeContainer.createEl("button", {
+			text: "HTML",
+			cls: "fg-mode-btn",
+		});
+
+		const setMode = (mode: OutputMode) => {
+			outputMode = mode;
+			if (mode === "codeblock") {
+				codeblockBtn.addClass("fg-mode-active");
+				htmlBtn.removeClass("fg-mode-active");
+			} else {
+				htmlBtn.addClass("fg-mode-active");
+				codeblockBtn.removeClass("fg-mode-active");
+			}
+		};
+
+		codeblockBtn.addEventListener("click", () => setMode("codeblock"));
+		htmlBtn.addEventListener("click", () => setMode("html"));
+
+		// Preview area - renders actual HTML output
 		const previewRow = contentEl.createDiv("fg-figlet-preview-row");
 		previewRow.createEl("label", { text: "Preview" });
 		const previewContainer = previewRow.createDiv("fg-figlet-preview");
-		const previewPre = previewContainer.createEl("pre");
 
-		// Update preview function
+		// Update preview function - renders full HTML with colors/gradients
 		const updatePreview = async () => {
 			const text = textInput.value.trim();
 			const font = fontSelect.value;
 
 			if (!text) {
-				previewPre.textContent = "(enter text above)";
-				previewPre.setCssStyles({ color: "" });
+				previewContainer.empty();
+				previewContainer.createEl("pre").textContent = "(enter text above)";
 				return;
 			}
 
 			try {
 				const figletText = await generateFigletText(text, font);
-				previewPre.textContent = figletText;
-				previewPre.setCssStyles({ color: selectedColor || "" });
+				const styleOptions = this.buildStyleOptions(selectedColor);
+				const html = createFigletHtml(figletText, styleOptions);
+
+				// Render the actual HTML into the preview
+				previewContainer.empty();
+				const parsed = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
+				const nodes = parsed.body.firstElementChild?.childNodes;
+				if (nodes) {
+					for (const node of Array.from(nodes)) {
+						previewContainer.appendChild(document.importNode(node, true));
+					}
+				}
 			} catch {
-				previewPre.textContent = `Error: Font "${font}" may not be available`;
-				previewPre.setCssStyles({ color: "var(--text-error)" });
+				previewContainer.empty();
+				const pre = previewContainer.createEl("pre");
+				pre.textContent = `Error: Font "${font}" may not be available`;
+				pre.setCssStyles({ color: "var(--text-error)" });
 			}
 		};
 
@@ -146,25 +188,15 @@ export class FigletModal extends Modal {
 			}
 
 			try {
-				const figletText = await generateFigletText(text, font);
-
-				// Determine if rainbow/gradient
-				let colors: string[] | undefined;
-				if (selectedColor === "rainbow" || selectedColor === "gradient") {
-					colors = this.plugin.settings.gradientColors;
+				if (outputMode === "codeblock") {
+					const codeBlock = this.buildCodeBlock(text, font, selectedColor);
+					this.editor.replaceSelection(codeBlock);
+				} else {
+					const figletText = await generateFigletText(text, font);
+					const styleOptions = this.buildStyleOptions(selectedColor);
+					const html = createFigletHtml(figletText, styleOptions);
+					this.editor.replaceSelection(html);
 				}
-
-				const styleOptions: FigletStyleOptions = {
-					color: colors ? undefined : (selectedColor || undefined),
-					colors: colors,
-					fontSize: this.plugin.settings.fontSize ?? 10,
-					lineHeight: this.plugin.settings.lineHeight ?? 1,
-					centered: this.plugin.settings.centered ?? true,
-				};
-				const html = createFigletHtml(figletText, styleOptions);
-
-				// Insert or replace selection
-				this.editor.replaceSelection(html);
 
 				// Save last used settings
 				this.plugin.settings.lastUsedFont = font;
@@ -176,6 +208,43 @@ export class FigletModal extends Modal {
 				new Notice(`Failed to generate figlet text: ${String(err)}`);
 			}
 		})(); });
+	}
+
+	private buildStyleOptions(selectedColor: string): FigletStyleOptions {
+		let colors: string[] | undefined;
+		if (selectedColor === "rainbow" || selectedColor === "gradient") {
+			colors = this.plugin.settings.gradientColors;
+		}
+
+		return {
+			color: colors ? undefined : (selectedColor || undefined),
+			colors: colors,
+			fontSize: this.plugin.settings.fontSize ?? 10,
+			lineHeight: this.plugin.settings.lineHeight ?? 1,
+			centered: this.plugin.settings.centered ?? true,
+		};
+	}
+
+	private buildCodeBlock(text: string, font: string, color: string): string {
+		const settings = this.plugin.settings;
+		const lines: string[] = [];
+		lines.push("```sfb-figlet");
+		lines.push(`font: ${font}`);
+
+		if (color === "rainbow" || color === "gradient") {
+			lines.push(`colors: ${settings.gradientColors.join(" ")}`);
+		} else if (color) {
+			lines.push(`color: ${color}`);
+		}
+
+		lines.push(`font-size: ${settings.fontSize ?? 10}`);
+		lines.push(`line-height: ${settings.lineHeight ?? 1}`);
+		lines.push(`centered: ${settings.centered ?? true}`);
+		lines.push("---");
+		lines.push(text);
+		lines.push("```");
+
+		return lines.join("\n");
 	}
 
 	onClose() {

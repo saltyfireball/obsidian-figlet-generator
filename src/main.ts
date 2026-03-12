@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, App } from "obsidian";
+import { Plugin, PluginSettingTab, App, type Editor } from "obsidian";
 import {
 	initFiglet,
 	generateFigletText,
@@ -27,6 +27,7 @@ declare global {
 			generateText(text: string, font?: string): Promise<string>;
 			createHtml(text: string, options: Record<string, unknown>): string;
 			defaultGradientColors: string[];
+			openModal(app: App, plugin: unknown, editor: unknown): void;
 		};
 	}
 }
@@ -62,6 +63,9 @@ export default class FigletGeneratorPlugin extends Plugin {
 			generateText: generateFigletText,
 			createHtml: createFigletHtml,
 			defaultGradientColors: DEFAULT_GRADIENT_COLORS,
+			openModal: (_app: App, _plugin: unknown, editor: unknown) => {
+				new FigletModal(this.app, this, editor as Editor).open();
+			},
 		};
 
 		// Add settings tab
