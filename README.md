@@ -6,17 +6,25 @@
   <img src="assets/header.svg" width="600" />
 </p>
 
-Generate and display ASCII art text using Figlet fonts in Obsidian. Create beautifully styled ASCII art with 280+ fonts, gradient colors, and flexible sizing options.
+Generate and display ASCII art text using Figlet fonts in Obsidian. Create beautifully styled ASCII art with 326 fonts, gradient colors, and flexible sizing options.
 
 **Author:** saltyfireball
+
+<p align="center">
+  <img src="assets/example_all_complete.png" width="600" />
+</p>
 
 ## Features
 
 ### Interactive Modal Command
 
-Insert ASCII art directly into your notes with an interactive modal dialog. Select from 280+ Figlet fonts, preview your text in real-time, customize colors, and insert the result into your editor.
+Insert ASCII art directly into your notes with an interactive modal dialog. Select from 326 Figlet fonts, preview your text in real-time, customize colors, and insert the result into your editor.
 
 **Command:** "Insert Figlet ASCII Art"
+
+<p align="center">
+  <img src="assets/example_modal.png" width="600" />
+</p>
 
 ### Code Block Support
 
@@ -28,8 +36,7 @@ font: Banner
 color: #5C7CFA
 ---
 Hello World
-````
-
+```
 ````
 
 ### Cross-Plugin API
@@ -39,7 +46,7 @@ Extend the plugin's functionality in your own plugins using the `window.figletAP
 ```typescript
 const result = await window.figletAPI.generateText('Hello', 'Banner');
 const html = window.figletAPI.createHtml('Test', { font: 'Standard', color: '#FF0000' });
-````
+```
 
 ## Installation
 
@@ -98,56 +105,71 @@ centered: true
 opacity: 0.8
 ---
 Your Text Here
-````
-
 ```
+````
 
 #### Code Block Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `font` | string | Standard | Name of the Figlet font to use |
-| `color` | string | inherit | Single color in hex format or "rainbow" for gradient |
-| `colors` | string | - | Space-separated list of hex colors for custom gradient |
+| `color` | string | inherit | A single hex color, multiple space/comma-separated hex colors, or `rainbow`/`gradient` for the default palette |
+| `colors` | string | - | Same as `color` -- both fields are interchangeable and accept single colors, multiple colors, or `rainbow`/`gradient` |
 | `font-size` | number | 10 | Font size in pixels |
 | `line-height` | number | 1 | Line height multiplier |
 | `centered` | boolean | true | Center the output text |
 | `opacity` | number | 1 | Text opacity from 0 to 1 |
 | `multi-center` | boolean | false | Center each line independently |
 
+`color` and `colors` are fully interchangeable. All of these work the same way:
+
+| Example | Result |
+|---------|--------|
+| `color: #5C7CFA` | Single color |
+| `colors: #5C7CFA` | Single color |
+| `color: #FF0000 #FFFF00 #00FF00` | 3-color gradient |
+| `colors: #FF0000 #FFFF00 #00FF00` | 3-color gradient |
+| `color: rainbow` | Default gradient palette |
+| `colors: rainbow` | Default gradient palette |
+| `color: gradient` | Default gradient palette |
+| `colors: gradient` | Default gradient palette |
+
 #### Color Examples
 
-```
-
+````
 ```sfb-figlet
 font: Standard
 color: #5C7CFA
 ---
 Blue Text
 ```
+````
 
-```
-
-```
-
+````
 ```sfb-figlet
 font: Banner
 color: rainbow
 ---
 Rainbow Gradient
 ```
+````
 
-```
-
-```
-
+````
 ```sfb-figlet
 font: Big
 colors: #FF0000 #FFFF00 #00FF00
 ---
 Custom Gradient
 ```
+````
 
+````
+```sfb-figlet
+font: Slant
+color: #FF6188 #FC9867 #FFD866 #A9DC76 #78DCE8
+---
+Inline Multi-Color
+```
 ````
 
 ### Cross-Plugin API
@@ -163,7 +185,7 @@ Generate ASCII art text and return it as a string.
 ```typescript
 const figlet = window.figletAPI;
 const ascii = await figlet.generateText('Hello', 'Banner');
-````
+```
 
 **`createHtml(text: string, options: FigletHtmlOptions): string`**
 
@@ -217,7 +239,7 @@ Configure plugin behavior in Settings > Figlet Generator:
 
 ## Available Fonts
 
-The plugin ships with 280+ display fonts from the Figlet font library, with 413 total font files. Fonts are loaded on-demand to minimize memory usage and automatically unloaded after text generation.
+The plugin ships with 326 fonts from the Figlet font library. Fonts are loaded on-demand to minimize memory usage and automatically unloaded after text generation.
 
 Some popular fonts:
 
@@ -256,16 +278,14 @@ font: Banner
 colors: #FF1744 #F57F17 #FBC02D #00BCD4 #3F51B5
 ---
 Multi-Color
-````
-
 ```
+````
 
 ### Opacity and Styling
 
 Adjust the visual appearance with opacity and sizing:
 
-```
-
+````
 ```sfb-figlet
 font: Big
 color: #4CAF50
@@ -275,15 +295,13 @@ line-height: 1.5
 ---
 Styled Text
 ```
-
-```
+````
 
 ### Line-by-Line Centering
 
 Center each line independently instead of the entire block:
 
-```
-
+````
 ```sfb-figlet
 font: Standard
 centered: false
@@ -292,8 +310,7 @@ multi-center: true
 Centered
 Lines
 ```
-
-```
+````
 
 ## Performance
 
@@ -311,23 +328,28 @@ Lines
 
 ## Examples
 
+<p align="center">
+  <img src="assets/example_edit_1.png" width="600" />
+</p>
+
+<p align="center">
+  <img src="assets/example_edit_2.png" width="600" />
+</p>
+
 ### Banner Title
 
-```
-
+````
 ```sfb-figlet
 font: Banner
 color: #5C7CFA
 ---
 My Notes
 ```
-
-```
+````
 
 ### Section Header
 
-```
-
+````
 ```sfb-figlet
 font: Lean
 color: #4CAF50
@@ -336,13 +358,11 @@ font-size: 11
 ---
 Introduction
 ```
-
-```
+````
 
 ### Rainbow Accent
 
-```
-
+````
 ```sfb-figlet
 font: Big
 color: rainbow
@@ -350,8 +370,7 @@ opacity: 0.9
 ---
 Featured
 ```
-
-```
+````
 
 ## Troubleshooting
 
@@ -388,9 +407,4 @@ Featured
 
 ## License
 
-MIT
-
-## Support
-
-For bug reports, feature requests, or questions, please refer to the plugin documentation or community forums.
-```
+[MIT](LICENSE)

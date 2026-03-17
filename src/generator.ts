@@ -377,6 +377,11 @@ export function createFigletHtml(
 	figletText: string,
 	options?: FigletStyleOptions,
 ): string {
+	// Normalize: if colors has exactly 1 entry, treat as single color
+	if (options?.colors && options.colors.length === 1) {
+		options = { ...options, color: options.colors[0], colors: undefined };
+	}
+
 	// Use colored spans for gradient - works in PDF unlike CSS background-clip
 	if (options?.colors && options.colors.length > 1) {
 		return createGradientHtml(figletText, options);

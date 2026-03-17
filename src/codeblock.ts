@@ -144,18 +144,40 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 
 		const font = options.font ? findFontName(options.font) : "Standard";
 
-		// Determine colors: YAML colors > YAML color > default
+		// Normalize color/colors: both fields accept single color, multiple colors,
+		// or keywords "rainbow"/"gradient" for the default gradient palette
 		let colors: string[] | undefined;
+		let singleColor: string | undefined;
+
 		if (options.colors && options.colors.length > 0) {
-			colors = options.colors;
-		} else if (options.color === "rainbow" || options.color === "gradient") {
-			// Special keyword to use default gradient colors
-			colors = settings.gradientColors;
+			// colors field: check for keywords, then treat as color list
+			if (options.colors.length === 1) {
+				const val = options.colors[0];
+				if (val === "rainbow" || val === "gradient") {
+					colors = settings.gradientColors;
+				} else {
+					singleColor = val;
+				}
+			} else {
+				colors = options.colors;
+			}
+		} else if (options.color) {
+			if (options.color === "rainbow" || options.color === "gradient") {
+				colors = settings.gradientColors;
+			} else {
+				// color field might contain space/comma-separated colors
+				const parsed = parseColors(options.color);
+				if (parsed.length > 1) {
+					colors = parsed;
+				} else {
+					singleColor = options.color;
+				}
+			}
 		}
 
 		// Merge YAML overrides with settings defaults
 		const styleOptions: FigletStyleOptions = {
-			color: colors ? undefined : options.color,
+			color: singleColor,
 			colors: colors,
 			fontSize: options.fontSize ?? settings.fontSize,
 			lineHeight: options.lineHeight ?? settings.lineHeight,
