@@ -117,20 +117,28 @@ export function initFiglet(app: App, manifestDir: string): void {
 /**
  * Load a font from the fonts folder at runtime
  */
+function resolveFontName(input: string): string {
+	if (ALL_FONT_FILES.includes(input)) return input;
+	const lower = input.toLowerCase();
+	const match = ALL_FONT_FILES.find((f) => f.toLowerCase() === lower);
+	return match ?? input;
+}
+
 async function loadFont(fontName: string): Promise<boolean> {
 	if (!appRef || !pluginDir) {
 		console.error("Figlet not initialized. Call initFiglet first.");
 		return false;
 	}
 
+	const resolved = resolveFontName(fontName);
 	try {
 		// Use Obsidian's adapter.read() for cross-platform support (desktop + mobile)
-		const fontPath = `${pluginDir}/fonts/${fontName}.flf`;
+		const fontPath = `${pluginDir}/fonts/${resolved}.flf`;
 		const fontData = await appRef.vault.adapter.read(fontPath);
-		figletLib.parseFont(fontName, fontData);
+		figletLib.parseFont(resolved, fontData);
 		return true;
 	} catch (error) {
-		console.error(`Failed to load font "${fontName}":`, error);
+		console.error(`Failed to load font "${fontName}" (resolved: "${resolved}"):`, error);
 		return false;
 	}
 }
