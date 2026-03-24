@@ -220,6 +220,7 @@ export async function generateFigletText(
 	text: string,
 	font: string = "Standard",
 ): Promise<string> {
+	font = resolveFontName(font);
 	const loaded = await loadFont(font);
 	if (!loaded) {
 		await loadFont("Standard");
