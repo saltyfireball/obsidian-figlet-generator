@@ -3,6 +3,7 @@ import {
 	generateFigletText,
 	createFigletHtml,
 	getAvailableFonts,
+	isFontAvailable,
 	type FigletSettings,
 	type FigletStyleOptions,
 } from "./generator";
@@ -143,6 +144,10 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 		}
 
 		const font = options.font ? findFontName(options.font) : "Standard";
+		let fontWarning: string | null = null;
+		if (options.font && !isFontAvailable(options.font)) {
+			fontWarning = `Font "${options.font}" not found, using Standard instead`;
+		}
 
 		// Normalize color/colors: both fields accept single color, multiple colors,
 		// or keywords "rainbow"/"gradient" for the default gradient palette
@@ -234,6 +239,12 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 						el.appendChild(document.importNode(node, true));
 					}
 				}
+			}
+			if (fontWarning) {
+				el.createEl("div", {
+					text: fontWarning,
+					cls: "sfb-figlet-font-warning",
+				});
 			}
 		} catch (err) {
 			el.createEl("div", {

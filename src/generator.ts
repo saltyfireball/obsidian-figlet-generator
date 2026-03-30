@@ -137,8 +137,8 @@ async function loadFont(fontName: string): Promise<boolean> {
 		const fontData = await appRef.vault.adapter.read(fontPath);
 		figletLib.parseFont(resolved, fontData);
 		return true;
-	} catch (error) {
-		console.error(`Failed to load font "${fontName}" (resolved: "${resolved}"):`, error);
+	} catch {
+		console.warn(`Figlet: font "${fontName}" not found, falling back to Standard`);
 		return false;
 	}
 }
@@ -210,6 +210,14 @@ export interface FigletStyleOptions {
 	lineHeight?: number;
 	centered?: boolean;
 	opacity?: number; // 0-1, defaults to 1
+}
+
+/**
+ * Check if a font name resolves to an available font
+ */
+export function isFontAvailable(fontName: string): boolean {
+	const resolved = resolveFontName(fontName);
+	return ALL_FONT_FILES.some((f) => f.toLowerCase() === resolved.toLowerCase());
 }
 
 /**
@@ -457,13 +465,6 @@ export function createFigletHtml(
 		.replace(/>/g, "&gt;");
 
 	return `<div class="${classAttr}"${containerStyleAttr}><pre${preStyleAttr}>${escapedText}</pre></div>`;
-}
-
-/**
- * Check if a font is available
- */
-export function isFontAvailable(fontName: string): boolean {
-	return ALL_FONT_FILES.includes(fontName);
 }
 
 /**

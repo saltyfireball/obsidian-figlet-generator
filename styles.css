@@ -244,6 +244,14 @@
 	padding: 8px;
 }
 
+.sfb-figlet-font-warning {
+	color: var(--text-warning, #ffd866);
+	font-size: 11px;
+	font-style: italic;
+	padding: 2px 8px;
+	opacity: 0.8;
+}
+
 .sfb-figlet-loading {
 	color: var(--text-muted);
 	font-style: italic;
