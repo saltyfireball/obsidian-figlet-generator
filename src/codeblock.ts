@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext } from "obsidian";
+import { type App, MarkdownPostProcessorContext } from "obsidian";
 import {
 	generateFigletText,
 	createFigletHtml,
@@ -27,6 +27,29 @@ interface FigletCodeBlockOptions {
 	centered?: boolean;
 	opacity?: number;
 	multiCenter?: boolean;
+	loadText?: string;
+}
+
+/**
+ * Resolve {{frontmatter:key}} placeholders in text using the
+ * current note's frontmatter. Returns the text unchanged if no
+ * placeholders are found or if the key doesn't exist.
+ */
+function resolveFrontmatterPlaceholders(
+	text: string,
+	app: App,
+	sourcePath: string,
+): string {
+	return text.replace(/\{\{frontmatter:([^}]+)\}\}/g, (_match, key: string) => {
+		const file = app.vault.getAbstractFileByPath(sourcePath);
+		if (!file) return "";
+		const cache = app.metadataCache.getFileCache(file as import("obsidian").TFile);
+		const value: unknown = cache?.frontmatter?.[key.trim()];
+		if (value == null) return "";
+		if (typeof value === "string") return value;
+		if (typeof value === "number" || typeof value === "boolean") return String(value);
+		return "";
+	});
 }
 
 /**
@@ -72,7 +95,7 @@ function parseCodeBlock(source: string): { options: FigletCodeBlockOptions; text
 
 			const colonIndex = line.indexOf(":");
 			if (colonIndex > 0) {
-				const key = line.slice(0, colonIndex).trim().toLowerCase().replace(/-/g, "");
+				const key = line.slice(0, colonIndex).trim().toLowerCase().replace(/[-_]/g, "");
 				const value = line.slice(colonIndex + 1).trim();
 
 				switch (key) {
@@ -101,6 +124,9 @@ function parseCodeBlock(source: string): { options: FigletCodeBlockOptions; text
 					case "multicenter":
 						options.multiCenter = value.toLowerCase() === "true";
 						break;
+					case "loadtext":
+						options.loadText = value.toLowerCase();
+						break;
 				}
 			}
 		}
@@ -125,15 +151,22 @@ function parseCodeBlock(source: string): { options: FigletCodeBlockOptions; text
 /**
  * Create a post-processor for sfb-figlet code blocks
  * @param getSettings - Function to get current figlet settings (for defaults)
+ * @param app - Obsidian App instance for frontmatter access
  */
-export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings) {
+export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings, app: App) {
 	return async (
 		source: string,
 		el: HTMLElement,
-		_ctx: MarkdownPostProcessorContext,
+		ctx: MarkdownPostProcessorContext,
 	): Promise<void> => {
-		const { options, text } = parseCodeBlock(source);
+		const { options, text: rawText } = parseCodeBlock(source);
 		const settings = getSettings();
+
+		// Resolve frontmatter placeholders when load_text: frontmatter
+		let text = rawText;
+		if (options.loadText === "frontmatter" && ctx.sourcePath) {
+			text = resolveFrontmatterPlaceholders(text, app, ctx.sourcePath);
+		}
 
 		if (!text) {
 			el.createEl("div", {

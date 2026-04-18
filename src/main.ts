@@ -46,7 +46,7 @@ export default class FigletGeneratorPlugin extends Plugin {
 		// Register code block processor using configurable ID
 		this.registerMarkdownCodeBlockProcessor(
 			this.settings.codeBlockId,
-			createFigletCodeBlockProcessor(() => this.settings),
+			createFigletCodeBlockProcessor(() => this.settings, this.app),
 		);
 
 		// Register insert-figlet command
