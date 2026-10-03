@@ -1,5 +1,5 @@
 import fonts from "virtual:figlet-fonts";
-import { gunzip } from "./inflate";
+import { gunzipSync } from "fflate";
 
 /**
  * Read a font bundled into main.js. Fonts are stored gzipped as base64 (see
@@ -13,5 +13,5 @@ export function readBundledFont(name: string): Promise<string | null> {
 	const bytes = new Uint8Array(binary.length);
 	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
-	return Promise.resolve(new TextDecoder().decode(gunzip(bytes)));
+	return Promise.resolve(new TextDecoder().decode(gunzipSync(bytes)));
 }
