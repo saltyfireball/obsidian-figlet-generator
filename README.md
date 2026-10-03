@@ -6,46 +6,89 @@
   <img src="assets/header.svg" width="600" />
 </p>
 
-Generate and display ASCII art text using Figlet fonts in Obsidian. Create beautifully styled ASCII art with 326 fonts, gradient colors, and flexible sizing options.
+Generate and display ASCII art text using Figlet fonts in Obsidian: 326 bundled fonts, solid colors, gradients, and sizing options, from a code block or an insert dialog.
 
 **Author:** saltyfireball
 
 <p align="center">
-  <img src="assets/example_all_complete.png" width="600" />
+  <img src="assets/media/hero.png" width="700" alt="Rainbow FIGLET title in ANSI Shadow above a smaller blue subtitle" />
 </p>
 
 ## Features
 
-### Interactive Modal Command
+### Code blocks that render as ASCII art
 
-Insert ASCII art directly into your notes with an interactive modal dialog. Select from 326 Figlet fonts, preview your text in real-time, customize colors, and insert the result into your editor.
-
-**Command:** "Insert Figlet ASCII Art"
-
-<p align="center">
-  <img src="assets/example_modal.png" width="600" />
-</p>
-
-### Code Block Support
-
-Embed ASCII art directly in your notes using code blocks with YAML-style configuration.
+Write options on top, a `---` line, then your text. The block re-renders as you edit it.
 
 ````
 ```sfb-figlet
-font: Banner
-color: #5C7CFA
+font: Big
+color: rainbow
 ---
-Hello World
+Hi there
 ```
 ````
 
-### Cross-Plugin API
+<p align="center">
+  <img src="assets/media/live-edit.gif" width="760" alt="Editing a code block: the font, color and text change and the art updates" />
+</p>
 
-Extend the plugin's functionality in your own plugins using the `window.figletAPI` interface.
+### 326 fonts
+
+Every font from the Figlet font library ships inside the plugin, so nothing extra needs installing. Font names ignore case: `font: ansi shadow` works.
+
+<p align="center">
+  <img src="assets/media/fonts.png" width="760" alt="A grid of twelve fonts: Standard, Big, Slant, ANSI Shadow, Doom, Banner3, Small, Graffiti, Larry 3D, Isometric1, Ogre, Bloody" />
+</p>
+
+### Solid colors, gradients and rainbow
+
+One color, a list of colors for a gradient, or `rainbow` for the palette in settings.
+
+<p align="center">
+  <img src="assets/media/colors.png" width="760" alt="Code blocks next to their output: a solid blue word, a red-yellow-green gradient, and a rainbow" />
+</p>
+
+````
+```sfb-figlet
+font: Big
+colors: #FF0000 #FFFF00 #00FF00
+---
+Gradient
+```
+````
+
+### Size, opacity and alignment
+
+<p align="center">
+  <img src="assets/media/options.png" width="760" alt="Code blocks showing font-size, opacity, centered: false, and two lines with and without multi-center" />
+</p>
+
+`multi-center: true` centers each line on its own; without it the lines keep their left edges and the block is centered as a whole.
+
+### Insert dialog
+
+Run **Insert figlet ASCII art** from the command palette to type text, pick a color and font, watch the preview, and insert either an `sfb-figlet` code block or plain HTML.
+
+<p align="center">
+  <img src="assets/media/modal.gif" width="640" alt="The insert dialog: typing Notes, setting rainbow, and switching fonts with the preview updating" />
+</p>
+
+### Light themes
+
+Colors come from your code block; everything else follows the theme.
+
+<p align="center">
+  <img src="assets/media/light-theme.png" width="700" alt="A gradient Roadmap title in a light-theme note" />
+</p>
+
+### Cross-plugin API
+
+Other plugins can generate ASCII art through `window.figletAPI`.
 
 ```typescript
-const result = await window.figletAPI.generateText('Hello', 'Banner');
-const html = window.figletAPI.createHtml('Test', { font: 'Standard', color: '#FF0000' });
+const ascii = await window.figletAPI.generateText('Hello', 'Banner');
+const html = window.figletAPI.createHtml(ascii, { color: '#FF0000' });
 ```
 
 ## Installation
@@ -82,18 +125,18 @@ You can install this plugin right now using the [BRAT](https://github.com/TfTHac
 
 ## Usage
 
-### Modal Command
+### Insert dialog
 
 1. Open the command palette (Ctrl/Cmd + P)
-2. Search for "Insert Figlet ASCII Art"
-3. Select your font from the dropdown
-4. Enter your text in the input field
-5. Customize colors and styling options
-6. Click "Insert" to add the ASCII art to your note
+2. Search for "Insert figlet ASCII art"
+3. Enter your text
+4. Optionally set a color (hex, CSS name, or `rainbow`) and pick a font
+5. Choose **Code block** or **HTML** output
+6. Click **Insert**
 
-### Code Blocks
+### Code blocks
 
-Create a code block with language ID `sfb-figlet` (configurable) and use YAML-style configuration:
+Create a code block with language ID `sfb-figlet` (configurable in settings). Options go above the `---` line, text below it:
 
 ````
 ```sfb-figlet
@@ -108,58 +151,45 @@ Your Text Here
 ```
 ````
 
-#### Code Block Options
+#### Code block options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `font` | string | Standard | Name of the Figlet font to use |
-| `color` | string | inherit | A single hex color, multiple space/comma-separated hex colors, or `rainbow`/`gradient` for the default palette |
-| `colors` | string | - | Same as `color` -- both fields are interchangeable and accept single colors, multiple colors, or `rainbow`/`gradient` |
+| `font` | string | Standard | Name of the Figlet font to use (case does not matter) |
+| `color` | string | inherit | A single color, several space/comma-separated colors, or `rainbow`/`gradient` for the palette in settings |
+| `colors` | string | - | Same as `color`; the two are interchangeable |
 | `font-size` | number | 10 | Font size in pixels |
 | `line-height` | number | 1 | Line height multiplier |
-| `centered` | boolean | true | Center the output text |
-| `opacity` | number | 1 | Text opacity from 0 to 1 |
+| `centered` | boolean | true | Center the output |
+| `opacity` | number | 1 | Opacity from 0 to 1 |
 | `multi-center` | boolean | false | Center each line independently |
 
-`color` and `colors` are fully interchangeable. All of these work the same way:
+`color` and `colors` accept the same values:
 
 | Example | Result |
 |---------|--------|
 | `color: #5C7CFA` | Single color |
-| `colors: #5C7CFA` | Single color |
 | `color: #FF0000 #FFFF00 #00FF00` | 3-color gradient |
-| `colors: #FF0000 #FFFF00 #00FF00` | 3-color gradient |
-| `color: rainbow` | Default gradient palette |
-| `colors: rainbow` | Default gradient palette |
-| `color: gradient` | Default gradient palette |
-| `colors: gradient` | Default gradient palette |
+| `color: rainbow` or `color: gradient` | Palette from settings |
 
-#### Color Examples
-
-````
-```sfb-figlet
-font: Standard
-color: #5C7CFA
----
-Blue Text
-```
-````
+#### Examples
 
 ````
 ```sfb-figlet
 font: Banner
-color: rainbow
+color: #5C7CFA
 ---
-Rainbow Gradient
+My Notes
 ```
 ````
 
 ````
 ```sfb-figlet
-font: Big
-colors: #FF0000 #FFFF00 #00FF00
+font: Lean
+color: #4CAF50
+font-size: 11
 ---
-Custom Gradient
+Introduction
 ```
 ````
 
@@ -172,28 +202,33 @@ Inline Multi-Color
 ```
 ````
 
-### Cross-Plugin API
+````
+```sfb-figlet
+font: Standard
+multi-center: true
+---
+Centered
+Lines
+```
+````
 
-Other plugins can use the Figlet Generator API to generate ASCII art programmatically.
+### Cross-plugin API
 
-#### API Methods
+#### `generateText(text: string, font?: string): Promise<string>`
 
-**`generateText(text: string, font?: string): Promise<string>`**
-
-Generate ASCII art text and return it as a string.
+Returns the ASCII art as plain text.
 
 ```typescript
-const figlet = window.figletAPI;
-const ascii = await figlet.generateText('Hello', 'Banner');
+const ascii = await window.figletAPI.generateText('Hello', 'Banner');
 ```
 
-**`createHtml(text: string, options: FigletHtmlOptions): string`**
+#### `createHtml(figletText: string, options: FigletHtmlOptions): string`
 
-Generate HTML representation of ASCII art with styling applied.
+Wraps ASCII art from `generateText` in styled HTML. The font is chosen in `generateText`; `createHtml` only styles it.
 
 ```typescript
-const html = figlet.createHtml("Hello", {
-    font: "Standard",
+const ascii = await window.figletAPI.generateText("Hello", "Standard");
+const html = window.figletAPI.createHtml(ascii, {
     color: "#FF0000",
     fontSize: 12,
     lineHeight: 1.2,
@@ -202,212 +237,70 @@ const html = figlet.createHtml("Hello", {
 });
 ```
 
-#### Default Gradient Colors
+#### `defaultGradientColors`
 
-Access the default rainbow gradient colors used by the plugin.
+The plugin's default gradient palette.
 
 ```typescript
-const colors = window.figletAPI.defaultGradientColors;
-console.log(colors); // ['#FF0000', '#FFFF00', '#00FF00', ...]
+console.log(window.figletAPI.defaultGradientColors);
+// ['#FF6188', '#FC9867', '#FFD866', '#A9DC76', '#78DCE8', '#5C7CFA', '#AB9DF2']
 ```
 
-#### FigletHtmlOptions
+#### `FigletHtmlOptions`
 
 ```typescript
 interface FigletHtmlOptions {
-    font?: string;
     color?: string;
-    colors?: string[];
+    colors?: string[]; // two or more for a gradient
     fontSize?: number;
     lineHeight?: number;
     centered?: boolean;
-    opacity?: number;
-    multiCenter?: boolean;
+    opacity?: number; // 0 to 1
 }
 ```
 
 ## Settings
 
-Configure plugin behavior in Settings > Figlet Generator:
-
-- **Code Block Language ID** - Set the language identifier for code blocks (default: `sfb-figlet`)
-- **Font Size** - Default font size in pixels (default: 10)
-- **Line Height** - Default line height multiplier (default: 1)
-- **Center Output** - Center text by default (default: enabled)
-- **Gradient Colors** - Colors used for rainbow mode
-- **Favorite Fonts** - Manage your favorite fonts for quick access
-
-## Available Fonts
-
-The plugin ships with 326 fonts from the Figlet font library, bundled inside the plugin so nothing extra needs installing. Fonts are loaded on-demand to minimize memory usage and automatically unloaded after text generation.
-
-### About the font data in main.js
-
-Most of `main.js` (about 1.5 MB) is font data, not code. At build time, [`scripts/figlet-fonts-plugin.mjs`](scripts/figlet-fonts-plugin.mjs) reads each font listed in [`src/font-list.json`](src/font-list.json) from the [figlet](https://www.npmjs.com/package/figlet) package's `fonts/` folder, gzips it and embeds it as a base64 string, because the community directory installs only `main.js`, `manifest.json` and `styles.css`. Each string decodes back to the original `.flf` text file when a font is first used, and the tests check that every one matches its source file byte for byte. Nothing in it is executable code.
-
-Some popular fonts:
-
-- Standard
-- Banner
-- Big
-- Block
-- Bubble
-- Digital
-- Doom
-- Graffiti
-- Isometric
-- Lean
-- Mini
-- Shadow
-- Slant
-- Small
-- Smscript
-- Smslant
-- Speed
-- Splash
-- Straight
-- Term
-
-View the complete font list in the modal font selector.
-
-## Advanced Features
-
-### Gradient Colors
-
-Use the `rainbow` color mode for automatic gradient or specify custom colors:
-
-````
-```sfb-figlet
-font: Banner
-colors: #FF1744 #F57F17 #FBC02D #00BCD4 #3F51B5
----
-Multi-Color
-```
-````
-
-### Opacity and Styling
-
-Adjust the visual appearance with opacity and sizing:
-
-````
-```sfb-figlet
-font: Big
-color: #4CAF50
-opacity: 0.7
-font-size: 14
-line-height: 1.5
----
-Styled Text
-```
-````
-
-### Line-by-Line Centering
-
-Center each line independently instead of the entire block:
-
-````
-```sfb-figlet
-font: Standard
-centered: false
-multi-center: true
----
-Centered
-Lines
-```
-````
-
-## Performance
-
-- Fonts are loaded on-demand and automatically unloaded after use
-- Code blocks are rendered asynchronously to prevent UI blocking
-- Efficient HTML generation with minimal DOM manipulation
-- Caching of frequently used fonts
-
-## Accessibility
-
-- Semantic HTML structure for ASCII art
-- Proper color contrast for readability
-- Configurable opacity to reduce visual strain
-- Text alternatives available via source view
-
-## Examples
-
 <p align="center">
-  <img src="assets/example_edit_1.png" width="600" />
+  <img src="assets/media/settings.png" width="640" alt="The settings tab: code block language ID, font size, line height, center output, and gradient colors" />
 </p>
 
-<p align="center">
-  <img src="assets/example_edit_2.png" width="600" />
-</p>
-
-### Banner Title
-
-````
-```sfb-figlet
-font: Banner
-color: #5C7CFA
----
-My Notes
-```
-````
-
-### Section Header
-
-````
-```sfb-figlet
-font: Lean
-color: #4CAF50
-centered: true
-font-size: 11
----
-Introduction
-```
-````
-
-### Rainbow Accent
-
-````
-```sfb-figlet
-font: Big
-color: rainbow
-opacity: 0.9
----
-Featured
-```
-````
+- **Code block language ID** - The language identifier for code blocks (default: `sfb-figlet`; reload the plugin after changing it)
+- **Font size** - Default font size in pixels (default: 10)
+- **Line height** - Default line height multiplier (default: 1)
+- **Center output** - Center output by default (default: on)
+- **Gradient colors** - The palette for `rainbow` and `gradient`
+- **Favorite fonts** - Fonts listed first in the insert dialog
 
 ## Troubleshooting
 
-### Code Block Not Rendering
+### Code block not rendering
 
-- Verify the language ID matches your plugin settings (default: `sfb-figlet`)
-- Check that text content is provided after the `---` separator
-- Ensure the YAML configuration is valid
+- Check that the language ID matches your settings (default: `sfb-figlet`)
+- Put your text after the `---` line
 
-### Font Not Found
+### Font not found
 
-- Check the font name spelling and capitalization
-- Verify the font exists in the font selector modal
-- Fall back to "Standard" font if unsure
+- Check the spelling against the font list in the insert dialog or settings
+- Use `Standard` if unsure
 
-### Performance Issues
+### API not available
 
-- Reduce font size if rendering is slow
-- Limit the number of code blocks per note
-- Close the plugin settings modal if not in use
-
-### API Not Available
-
-- Ensure the Figlet Generator plugin is installed and enabled
-- Check browser console for errors
-- Verify other plugins are loading after Figlet Generator
+- Make sure Figlet Generator is installed and enabled
+- Check the developer console for errors
 
 ## Limitations
 
-- Font files are loaded from the plugin directory
-- Very large text may affect performance
-- Some special characters may not render in all fonts
-- Rainbow gradient uses predefined color set (customizable in settings)
+- Very large text may be slow to render
+- Some fonts do not include every character
+
+## About the font data in main.js
+
+Most of `main.js` (about 1.5 MB) is font data, not code. At build time, [`scripts/figlet-fonts-plugin.mjs`](scripts/figlet-fonts-plugin.mjs) reads each font listed in [`src/font-list.json`](src/font-list.json) from the [figlet](https://www.npmjs.com/package/figlet) package's `fonts/` folder, gzips it and embeds it as a base64 string, because the community directory installs only `main.js`, `manifest.json` and `styles.css`. Each string decodes back to the original `.flf` text file when a font is first used, and the tests check that every one matches its source file byte for byte. Nothing in it is executable code.
+
+## Making the README media
+
+The screenshots and GIFs in `assets/media/` come from the real plugin in headless Chromium. See `tools/readme-media/capture.mjs`.
 
 ## License
 
