@@ -49,21 +49,18 @@ function resolveFontName(input: string): string {
 }
 
 /**
- * Load a font bundled into main.js
+ * Read a font bundled into main.js, or null if it is missing or unreadable
  */
-async function loadFont(fontName: string): Promise<boolean> {
-	const resolved = resolveFontName(fontName);
+async function readFont(fontName: string): Promise<string | null> {
 	try {
-		const fontData = await readBundledFont(resolved);
+		const fontData = await readBundledFont(fontName);
 		if (fontData === null) {
 			console.warn(`Figlet: font "${fontName}" not found, falling back to Standard`);
-			return false;
 		}
-		figletLib.parseFont(resolved, fontData);
-		return true;
+		return fontData;
 	} catch (err) {
 		console.warn(`Figlet: font "${fontName}" failed to load, falling back to Standard`, err);
-		return false;
+		return null;
 	}
 }
 
@@ -146,249 +143,245 @@ export function isFontAvailable(fontName: string): boolean {
 
 /**
  * Generate figlet text asynchronously
- * Loads font, generates text, then unloads to free memory
+ * Reads the font, then parses, renders and unloads it in one synchronous step.
+ * Renders run concurrently (one per code block), and each one unloads every
+ * font, so nothing may await between parsing a font and rendering with it.
  */
 export async function generateFigletText(
 	text: string,
 	font: string = "Standard",
 ): Promise<string> {
 	font = resolveFontName(font);
-	const loaded = await loadFont(font);
-	if (!loaded) {
-		await loadFont("Standard");
+	let fontData = await readFont(font);
+	if (fontData === null) {
 		font = "Standard";
+		fontData = await readFont(font);
+		if (fontData === null) throw new Error("Figlet: the Standard font is missing from the bundle");
 	}
 
-	return new Promise((resolve, reject) => {
-		const opts: { font: string } = { font };
-		void (figletLib.text as (txt: string, options: { font: string }, cb: (err: Error | null, result?: string) => void) => void)(
-			text,
-			opts,
-			(err: Error | null, result: string | undefined) => {
-				// Unload fonts after generation to free memory
-				unloadFonts();
-
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve(result || "");
-			},
-		);
-	});
+	try {
+		figletLib.parseFont(font, fontData);
+		return figletLib.textSync(text, { font });
+	} finally {
+		// Unload fonts after generation to free memory
+		unloadFonts();
+	}
 }
 
+type Rgb = [number, number, number];
+
 /**
- * Interpolate between two hex colors
+ * Parse a hex (#rgb, #rgba, #rrggbb, #rrggbbaa) or rgb()/rgba() color into
+ * its red, green and blue channels. Alpha is dropped. Returns null for
+ * anything else (named colors, var(--x), hsl), which cannot be mixed here.
  */
-function interpolateColor(color1: string, color2: string, factor: number): string {
-	const hex = (c: string) => parseInt(c, 16);
-	const r1 = hex(color1.slice(1, 3));
-	const g1 = hex(color1.slice(3, 5));
-	const b1 = hex(color1.slice(5, 7));
-	const r2 = hex(color2.slice(1, 3));
-	const g2 = hex(color2.slice(3, 5));
-	const b2 = hex(color2.slice(5, 7));
+function parseRgb(color: string): Rgb | null {
+	const hex = /^#([0-9a-f]{3,8})$/i.exec(color)?.[1];
+	if (hex && (hex.length === 3 || hex.length === 4)) {
+		return [0, 1, 2].map((i) => parseInt(hex[i] + hex[i], 16)) as Rgb;
+	}
+	if (hex && (hex.length === 6 || hex.length === 8)) {
+		return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
+	}
 
-	const r = Math.round(r1 + (r2 - r1) * factor);
-	const g = Math.round(g1 + (g2 - g1) * factor);
-	const b = Math.round(b1 + (b2 - b1) * factor);
+	const fn = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
+	if (fn) {
+		return [fn[1], fn[2], fn[3]].map((c) => Math.min(255, Math.round(Number(c)))) as Rgb;
+	}
+	return null;
+}
 
-	return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+function toHex([r, g, b]: Rgb): string {
+	return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /**
- * Get color at position along gradient
+ * Get color at position along gradient. Stops that all parse to RGB are
+ * blended smoothly; otherwise each position takes its nearest stop, so named
+ * colors and CSS variables still band across the text instead of breaking.
  */
 function getGradientColor(colors: string[], position: number): string {
 	if (colors.length === 1) return colors[0];
-	if (position <= 0) return colors[0];
-	if (position >= 1) return colors[colors.length - 1];
 
-	const scaledPos = position * (colors.length - 1);
-	const index = Math.floor(scaledPos);
+	const scaledPos = Math.min(Math.max(position, 0), 1) * (colors.length - 1);
+	const index = Math.min(Math.floor(scaledPos), colors.length - 2);
 	const factor = scaledPos - index;
 
-	return interpolateColor(colors[index], colors[index + 1], factor);
+	const from = parseRgb(colors[index]);
+	const to = parseRgb(colors[index + 1]);
+	if (!from || !to) return colors[Math.round(scaledPos)];
+
+	return toHex(from.map((c, i) => Math.round(c + (to[i] - c) * factor)) as Rgb);
+}
+
+/** A run of characters drawn in one color (no color: inherit). */
+interface FigletSegment {
+	text: string;
+	color?: string;
 }
 
 /**
- * Create gradient text using colored spans (works in PDF unlike CSS background-clip)
- * Splits each line into character segments with interpolated colors
+ * Everything needed to draw figlet output, independent of how it is drawn:
+ * as DOM nodes on screen, or as an HTML string inserted into a note.
+ * Style values keep their insertion order, which is the order in the HTML.
  */
-function createGradientHtml(
-	figletText: string,
-	options: FigletStyleOptions,
-): string {
-	// Sanitize colors to prevent CSS injection
-	const colors = options.colors!.map(sanitizeColor);
-	const fontSize = options.fontSize ?? 10;
-	const lineHeight = options.lineHeight ?? 1;
-	const centered = options.centered !== false;
+interface FigletLayout {
+	classes: string[];
+	containerStyles: [string, string][];
+	preStyles: [string, string][];
+	lines: FigletSegment[][];
+}
 
+/**
+ * Drop trailing blank lines and the trailing spaces figlet pads lines with
+ */
+function trimFigletLines(figletText: string): string[] {
 	const lines = figletText.split("\n");
-
-	// Remove empty trailing lines
 	while (lines.length > 0 && lines[lines.length - 1]?.trim() === "") {
 		lines.pop();
 	}
-
-	// Trim trailing whitespace from each line (figlet pads with spaces)
-	const trimmedLines = lines.map((l) => l.trimEnd());
-	const maxLineLength = Math.max(...trimmedLines.map((l) => l.length));
-
-	// Build colored lines - each character gets its color based on horizontal position
-	const coloredLines = trimmedLines.map((line) => {
-		if (line.length === 0) return "";
-
-		let result = "";
-		let currentColor = "";
-		let currentChars = "";
-
-		for (let i = 0; i < line.length; i++) {
-			const char = line[i];
-			// Calculate position along gradient (0 to 1)
-			const position = maxLineLength > 1 ? i / (maxLineLength - 1) : 0;
-			const color = getGradientColor(colors, position);
-
-			if (color === currentColor) {
-				currentChars += char;
-			} else {
-				// Flush previous segment
-				if (currentChars) {
-					const escaped = currentChars
-						.replace(/&/g, "&amp;")
-						.replace(/</g, "&lt;")
-						.replace(/>/g, "&gt;");
-					result += `<span style="color: ${currentColor}">${escaped}</span>`;
-				}
-				currentColor = color;
-				currentChars = char;
-			}
-		}
-
-		// Flush final segment
-		if (currentChars) {
-			const escaped = currentChars
-				.replace(/&/g, "&amp;")
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;");
-			result += `<span style="color: ${currentColor}">${escaped}</span>`;
-		}
-
-		return result;
-	});
-
-	const opacity = options.opacity ?? 1;
-
-	const preStyles = [
-		"margin: 0",
-		"padding: 5px 0",
-		"border: none",
-		"font-family: monospace",
-		"white-space: pre",
-		"display: inline-block",
-		`font-size: ${fontSize}px`,
-		`line-height: ${lineHeight}`,
-	];
-
-	if (opacity !== 1) {
-		preStyles.push(`opacity: ${opacity}`);
-	}
-
-	const containerStyles = ["display: flex", "padding: 5px 0"];
-	const containerClasses = ["sfb-figlet-display", "sfb-figlet-gradient"];
-
-	if (centered) {
-		containerStyles.push("justify-content: center");
-	} else {
-		containerStyles.push("justify-content: flex-start");
-		containerClasses.push("sfb-figlet-left");
-	}
-
-	const content = coloredLines.join("\n");
-
-	return `<div class="${containerClasses.join(" ")}" style="${containerStyles.join("; ")}"><pre style="${preStyles.join("; ")}">${content}</pre></div>`;
+	return lines.map((l) => l.trimEnd());
 }
 
 /**
- * Create the HTML output for figlet text
+ * Split each line into runs of one color, each character colored by its
+ * horizontal position (colored spans work in PDF export, unlike CSS
+ * background-clip)
+ */
+function gradientSegments(lines: string[], colors: string[]): FigletSegment[][] {
+	const maxLineLength = Math.max(...lines.map((l) => l.length));
+	return lines.map((line) => {
+		const segments: FigletSegment[] = [];
+		for (let i = 0; i < line.length; i++) {
+			const position = maxLineLength > 1 ? i / (maxLineLength - 1) : 0;
+			const color = getGradientColor(colors, position);
+			const last = segments[segments.length - 1];
+			if (last && last.color === color) {
+				last.text += line[i];
+			} else {
+				segments.push({ text: line[i], color });
+			}
+		}
+		return segments;
+	});
+}
+
+function layoutFiglet(figletText: string, options?: FigletStyleOptions): FigletLayout {
+	// Normalize: if colors has exactly 1 entry, treat as single color
+	if (options?.colors && options.colors.length === 1) {
+		options = { ...options, color: options.colors[0], colors: undefined };
+	}
+	// Sanitize colors to prevent CSS injection
+	const gradient = options?.colors && options.colors.length > 1 ? options.colors.map(sanitizeColor) : null;
+
+	const classes = ["sfb-figlet-display"];
+	if (gradient) classes.push("sfb-figlet-gradient");
+
+	const containerStyles: [string, string][] = [
+		["display", "flex"],
+		["padding", "5px 0"],
+	];
+	if (options?.centered === false) {
+		containerStyles.push(["justify-content", "flex-start"]);
+		classes.push("sfb-figlet-left");
+	} else {
+		containerStyles.push(["justify-content", "center"]);
+	}
+
+	// Base pre styles for export compatibility
+	const preStyles: [string, string][] = [
+		["margin", "0"],
+		["padding", "5px 0"],
+		["border", "none"],
+		["font-family", "monospace"],
+		["white-space", "pre"],
+		["display", "inline-block"],
+	];
+	if (!gradient && options?.color) {
+		preStyles.push(["color", sanitizeColor(options.color)]);
+	}
+	preStyles.push(["font-size", `${options?.fontSize ?? 10}px`]);
+	preStyles.push(["line-height", `${options?.lineHeight ?? 1}`]);
+	if (options?.opacity !== undefined && options.opacity !== 1) {
+		preStyles.push(["opacity", `${options.opacity}`]);
+	}
+
+	const lines = trimFigletLines(figletText);
+	return {
+		classes,
+		containerStyles,
+		preStyles,
+		lines: gradient
+			? gradientSegments(lines, gradient)
+			: [[{ text: lines.join("\n") }]],
+	};
+}
+
+function escapeHtml(text: string): string {
+	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function styleAttr(styles: [string, string][]): string {
+	return escapeHtml(styles.map(([k, v]) => `${k}: ${v}`).join("; "));
+}
+
+/**
+ * Create the HTML output for figlet text, for inserting into a note or for
+ * other plugins through the API. To show figlet output on screen, use
+ * renderFiglet instead.
  */
 export function createFigletHtml(
 	figletText: string,
 	options?: FigletStyleOptions,
 ): string {
-	// Normalize: if colors has exactly 1 entry, treat as single color
-	if (options?.colors && options.colors.length === 1) {
-		options = { ...options, color: options.colors[0], colors: undefined };
-	}
+	const layout = layoutFiglet(figletText, options);
+	const content = layout.lines
+		.map((segments) =>
+			segments
+				.map((s) =>
+					s.color === undefined
+						? escapeHtml(s.text)
+						: `<span style="${styleAttr([["color", s.color]])}">${escapeHtml(s.text)}</span>`,
+				)
+				.join(""),
+		)
+		.join("\n");
+	return `<div class="${layout.classes.join(" ")}" style="${styleAttr(layout.containerStyles)}"><pre style="${styleAttr(layout.preStyles)}">${content}</pre></div>`;
+}
 
-	// Use colored spans for gradient - works in PDF unlike CSS background-clip
-	if (options?.colors && options.colors.length > 1) {
-		return createGradientHtml(figletText, options);
-	}
+// setCssStyles takes camelCase keys (fontSize, not font-size)
+function toCssStyles(styles: [string, string][]): Partial<CSSStyleDeclaration> {
+	const out: Record<string, string> = {};
+	for (const [k, v] of styles) out[k.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())] = v;
+	return out as Partial<CSSStyleDeclaration>;
+}
 
-	const preStyles: string[] = [];
-	const containerStyles: string[] = [];
-	const containerClasses = ["sfb-figlet-display"];
+/**
+ * Render figlet text into an element with Obsidian's DOM helpers. Produces
+ * the same structure and styles as createFigletHtml.
+ */
+export function renderFiglet(
+	parent: HTMLElement,
+	figletText: string,
+	options?: FigletStyleOptions,
+): HTMLDivElement {
+	const layout = layoutFiglet(figletText, options);
+	const container = parent.createDiv({ cls: layout.classes });
+	container.setCssStyles(toCssStyles(layout.containerStyles));
+	const pre = container.createEl("pre");
+	pre.setCssStyles(toCssStyles(layout.preStyles));
 
-	// Base pre styles for export compatibility
-	preStyles.push("margin: 0");
-	preStyles.push("padding: 5px 0");
-	preStyles.push("border: none");
-	preStyles.push("font-family: monospace");
-	preStyles.push("white-space: pre");
-	preStyles.push("display: inline-block");
-
-	// Container styles for export
-	containerStyles.push("display: flex");
-	containerStyles.push("padding: 5px 0");
-
-	if (options?.color) {
-		preStyles.push(`color: ${sanitizeColor(options.color)}`);
-	}
-
-	if (options?.fontSize !== undefined) {
-		preStyles.push(`font-size: ${options.fontSize}px`);
-	} else {
-		preStyles.push("font-size: 10px");
-	}
-
-	if (options?.lineHeight !== undefined) {
-		preStyles.push(`line-height: ${options.lineHeight}`);
-	} else {
-		preStyles.push("line-height: 1");
-	}
-
-	if (options?.opacity !== undefined && options.opacity !== 1) {
-		preStyles.push(`opacity: ${options.opacity}`);
-	}
-
-	if (options?.centered === false) {
-		containerStyles.push("justify-content: flex-start");
-		containerClasses.push("sfb-figlet-left");
-	} else {
-		containerStyles.push("justify-content: center");
-	}
-
-	const preStyleAttr = ` style="${preStyles.join("; ")}"`;
-	const containerStyleAttr = ` style="${containerStyles.join("; ")}"`;
-	const classAttr = containerClasses.join(" ");
-
-	// Remove empty trailing lines and trim trailing whitespace from each line
-	const lines = figletText.split("\n");
-	while (lines.length > 0 && lines[lines.length - 1]?.trim() === "") {
-		lines.pop();
-	}
-
-	const escapedText = lines
-		.map((l) => l.trimEnd())
-		.join("\n")
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;");
-
-	return `<div class="${classAttr}"${containerStyleAttr}><pre${preStyleAttr}>${escapedText}</pre></div>`;
+	layout.lines.forEach((segments, i) => {
+		if (i > 0) pre.appendText("\n");
+		for (const s of segments) {
+			if (s.color === undefined) {
+				pre.appendText(s.text);
+			} else {
+				pre.createSpan({ text: s.text }).setCssStyles({ color: s.color });
+			}
+		}
+	});
+	return container;
 }
 
 /**
