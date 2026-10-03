@@ -300,7 +300,7 @@ Most of `main.js` (about 1.5 MB) is font data, not code. At build time, [`script
 
 ## Making the README media
 
-The screenshots and GIFs in `assets/media/` come from the real plugin in headless Chromium. See `tools/readme-media/capture.mjs`.
+The screenshots and GIFs in `assets/media/` are captured from the Obsidian app with the plugin installed, by the `obsidian-plugin-showcase` tool (`node src/run.mjs plugins/figlet/scenes.mjs`).
 
 ## License
 
