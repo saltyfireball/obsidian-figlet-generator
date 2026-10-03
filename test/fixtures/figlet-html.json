@@ -1,0 +1,80 @@
+{
+	"art": "  _   _ _    _____  __  \n | | | (_)  / ( _ ) \\ \\ \n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_>  </ /\n |_| |_|_|  \\_\\___/\\/_/ \n                        ",
+	"cases": {
+		"no options": {
+			"options": null,
+			"html": "<div class=\"sfb-figlet-display\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 10px; line-height: 1\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"single color": {
+			"options": {
+				"color": "#ff6188"
+			},
+			"html": "<div class=\"sfb-figlet-display\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; color: #ff6188; font-size: 10px; line-height: 1\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"single colors entry": {
+			"options": {
+				"colors": [
+					"red"
+				]
+			},
+			"html": "<div class=\"sfb-figlet-display\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; color: red; font-size: 10px; line-height: 1\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"bad color": {
+			"options": {
+				"color": "red;background:url(x)"
+			},
+			"html": "<div class=\"sfb-figlet-display\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; color: transparent; font-size: 10px; line-height: 1\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"size and height": {
+			"options": {
+				"fontSize": 14,
+				"lineHeight": 1.2
+			},
+			"html": "<div class=\"sfb-figlet-display\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 14px; line-height: 1.2\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"left": {
+			"options": {
+				"centered": false
+			},
+			"html": "<div class=\"sfb-figlet-display sfb-figlet-left\" style=\"display: flex; padding: 5px 0; justify-content: flex-start\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 10px; line-height: 1\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"opacity": {
+			"options": {
+				"opacity": 0.5
+			},
+			"html": "<div class=\"sfb-figlet-display\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 10px; line-height: 1; opacity: 0.5\">  _   _ _    _____  __\n | | | (_)  / ( _ ) \\ \\\n | |_| | | / // _ \\/\\\\ \\\n |  _  | | \\ \\ (_&gt;  &lt;/ /\n |_| |_|_|  \\_\\___/\\/_/</pre></div>"
+		},
+		"gradient": {
+			"options": {
+				"colors": [
+					"#ff0000",
+					"#00ff00",
+					"#0000ff"
+				]
+			},
+			"html": "<div class=\"sfb-figlet-display sfb-figlet-gradient\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 10px; line-height: 1\"><span style=\"color: #ff0000\"> </span><span style=\"color: #e91600\"> </span><span style=\"color: #d32c00\">_</span><span style=\"color: #bc4300\"> </span><span style=\"color: #a65900\"> </span><span style=\"color: #906f00\"> </span><span style=\"color: #7a8500\">_</span><span style=\"color: #649b00\"> </span><span style=\"color: #4eb100\">_</span><span style=\"color: #37c800\"> </span><span style=\"color: #21de00\"> </span><span style=\"color: #0bf400\"> </span><span style=\"color: #00f40b\"> </span><span style=\"color: #00de21\">_</span><span style=\"color: #00c837\">_</span><span style=\"color: #00b14e\">_</span><span style=\"color: #009b64\">_</span><span style=\"color: #00857a\">_</span><span style=\"color: #006f90\"> </span><span style=\"color: #0059a6\"> </span><span style=\"color: #0043bc\">_</span><span style=\"color: #002cd3\">_</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #e91600\">|</span><span style=\"color: #d32c00\"> </span><span style=\"color: #bc4300\">|</span><span style=\"color: #a65900\"> </span><span style=\"color: #906f00\">|</span><span style=\"color: #7a8500\"> </span><span style=\"color: #649b00\">(</span><span style=\"color: #4eb100\">_</span><span style=\"color: #37c800\">)</span><span style=\"color: #21de00\"> </span><span style=\"color: #0bf400\"> </span><span style=\"color: #00f40b\">/</span><span style=\"color: #00de21\"> </span><span style=\"color: #00c837\">(</span><span style=\"color: #00b14e\"> </span><span style=\"color: #009b64\">_</span><span style=\"color: #00857a\"> </span><span style=\"color: #006f90\">)</span><span style=\"color: #0059a6\"> </span><span style=\"color: #0043bc\">\\</span><span style=\"color: #002cd3\"> </span><span style=\"color: #0016e9\">\\</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #e91600\">|</span><span style=\"color: #d32c00\"> </span><span style=\"color: #bc4300\">|</span><span style=\"color: #a65900\">_</span><span style=\"color: #906f00\">|</span><span style=\"color: #7a8500\"> </span><span style=\"color: #649b00\">|</span><span style=\"color: #4eb100\"> </span><span style=\"color: #37c800\">|</span><span style=\"color: #21de00\"> </span><span style=\"color: #0bf400\">/</span><span style=\"color: #00f40b\"> </span><span style=\"color: #00de21\">/</span><span style=\"color: #00c837\">/</span><span style=\"color: #00b14e\"> </span><span style=\"color: #009b64\">_</span><span style=\"color: #00857a\"> </span><span style=\"color: #006f90\">\\</span><span style=\"color: #0059a6\">/</span><span style=\"color: #0043bc\">\\</span><span style=\"color: #002cd3\">\\</span><span style=\"color: #0016e9\"> </span><span style=\"color: #0000ff\">\\</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #e91600\">|</span><span style=\"color: #d32c00\"> </span><span style=\"color: #bc4300\"> </span><span style=\"color: #a65900\">_</span><span style=\"color: #906f00\"> </span><span style=\"color: #7a8500\"> </span><span style=\"color: #649b00\">|</span><span style=\"color: #4eb100\"> </span><span style=\"color: #37c800\">|</span><span style=\"color: #21de00\"> </span><span style=\"color: #0bf400\">\\</span><span style=\"color: #00f40b\"> </span><span style=\"color: #00de21\">\\</span><span style=\"color: #00c837\"> </span><span style=\"color: #00b14e\">(</span><span style=\"color: #009b64\">_</span><span style=\"color: #00857a\">&gt;</span><span style=\"color: #006f90\"> </span><span style=\"color: #0059a6\"> </span><span style=\"color: #0043bc\">&lt;</span><span style=\"color: #002cd3\">/</span><span style=\"color: #0016e9\"> </span><span style=\"color: #0000ff\">/</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #e91600\">|</span><span style=\"color: #d32c00\">_</span><span style=\"color: #bc4300\">|</span><span style=\"color: #a65900\"> </span><span style=\"color: #906f00\">|</span><span style=\"color: #7a8500\">_</span><span style=\"color: #649b00\">|</span><span style=\"color: #4eb100\">_</span><span style=\"color: #37c800\">|</span><span style=\"color: #21de00\"> </span><span style=\"color: #0bf400\"> </span><span style=\"color: #00f40b\">\\</span><span style=\"color: #00de21\">_</span><span style=\"color: #00c837\">\\</span><span style=\"color: #00b14e\">_</span><span style=\"color: #009b64\">_</span><span style=\"color: #00857a\">_</span><span style=\"color: #006f90\">/</span><span style=\"color: #0059a6\">\\</span><span style=\"color: #0043bc\">/</span><span style=\"color: #002cd3\">_</span><span style=\"color: #0016e9\">/</span></pre></div>"
+		},
+		"gradient left faded": {
+			"options": {
+				"colors": [
+					"#f00",
+					"#00f"
+				],
+				"centered": false,
+				"opacity": 0.4,
+				"fontSize": 8,
+				"lineHeight": 0.9
+			},
+			"html": "<div class=\"sfb-figlet-display sfb-figlet-gradient sfb-figlet-left\" style=\"display: flex; padding: 5px 0; justify-content: flex-start\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 8px; line-height: 0.9; opacity: 0.4\"><span style=\"color: #ff0000\"> </span><span style=\"color: #f4000b\"> </span><span style=\"color: #e90016\">_</span><span style=\"color: #de0021\"> </span><span style=\"color: #d3002c\"> </span><span style=\"color: #c80037\"> </span><span style=\"color: #bc0043\">_</span><span style=\"color: #b1004e\"> </span><span style=\"color: #a60059\">_</span><span style=\"color: #9b0064\"> </span><span style=\"color: #90006f\"> </span><span style=\"color: #85007a\"> </span><span style=\"color: #7a0085\"> </span><span style=\"color: #6f0090\">_</span><span style=\"color: #64009b\">_</span><span style=\"color: #5900a6\">_</span><span style=\"color: #4e00b1\">_</span><span style=\"color: #4300bc\">_</span><span style=\"color: #3700c8\"> </span><span style=\"color: #2c00d3\"> </span><span style=\"color: #2100de\">_</span><span style=\"color: #1600e9\">_</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #f4000b\">|</span><span style=\"color: #e90016\"> </span><span style=\"color: #de0021\">|</span><span style=\"color: #d3002c\"> </span><span style=\"color: #c80037\">|</span><span style=\"color: #bc0043\"> </span><span style=\"color: #b1004e\">(</span><span style=\"color: #a60059\">_</span><span style=\"color: #9b0064\">)</span><span style=\"color: #90006f\"> </span><span style=\"color: #85007a\"> </span><span style=\"color: #7a0085\">/</span><span style=\"color: #6f0090\"> </span><span style=\"color: #64009b\">(</span><span style=\"color: #5900a6\"> </span><span style=\"color: #4e00b1\">_</span><span style=\"color: #4300bc\"> </span><span style=\"color: #3700c8\">)</span><span style=\"color: #2c00d3\"> </span><span style=\"color: #2100de\">\\</span><span style=\"color: #1600e9\"> </span><span style=\"color: #0b00f4\">\\</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #f4000b\">|</span><span style=\"color: #e90016\"> </span><span style=\"color: #de0021\">|</span><span style=\"color: #d3002c\">_</span><span style=\"color: #c80037\">|</span><span style=\"color: #bc0043\"> </span><span style=\"color: #b1004e\">|</span><span style=\"color: #a60059\"> </span><span style=\"color: #9b0064\">|</span><span style=\"color: #90006f\"> </span><span style=\"color: #85007a\">/</span><span style=\"color: #7a0085\"> </span><span style=\"color: #6f0090\">/</span><span style=\"color: #64009b\">/</span><span style=\"color: #5900a6\"> </span><span style=\"color: #4e00b1\">_</span><span style=\"color: #4300bc\"> </span><span style=\"color: #3700c8\">\\</span><span style=\"color: #2c00d3\">/</span><span style=\"color: #2100de\">\\</span><span style=\"color: #1600e9\">\\</span><span style=\"color: #0b00f4\"> </span><span style=\"color: #0000ff\">\\</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #f4000b\">|</span><span style=\"color: #e90016\"> </span><span style=\"color: #de0021\"> </span><span style=\"color: #d3002c\">_</span><span style=\"color: #c80037\"> </span><span style=\"color: #bc0043\"> </span><span style=\"color: #b1004e\">|</span><span style=\"color: #a60059\"> </span><span style=\"color: #9b0064\">|</span><span style=\"color: #90006f\"> </span><span style=\"color: #85007a\">\\</span><span style=\"color: #7a0085\"> </span><span style=\"color: #6f0090\">\\</span><span style=\"color: #64009b\"> </span><span style=\"color: #5900a6\">(</span><span style=\"color: #4e00b1\">_</span><span style=\"color: #4300bc\">&gt;</span><span style=\"color: #3700c8\"> </span><span style=\"color: #2c00d3\"> </span><span style=\"color: #2100de\">&lt;</span><span style=\"color: #1600e9\">/</span><span style=\"color: #0b00f4\"> </span><span style=\"color: #0000ff\">/</span>\n<span style=\"color: #ff0000\"> </span><span style=\"color: #f4000b\">|</span><span style=\"color: #e90016\">_</span><span style=\"color: #de0021\">|</span><span style=\"color: #d3002c\"> </span><span style=\"color: #c80037\">|</span><span style=\"color: #bc0043\">_</span><span style=\"color: #b1004e\">|</span><span style=\"color: #a60059\">_</span><span style=\"color: #9b0064\">|</span><span style=\"color: #90006f\"> </span><span style=\"color: #85007a\"> </span><span style=\"color: #7a0085\">\\</span><span style=\"color: #6f0090\">_</span><span style=\"color: #64009b\">\\</span><span style=\"color: #5900a6\">_</span><span style=\"color: #4e00b1\">_</span><span style=\"color: #4300bc\">_</span><span style=\"color: #3700c8\">/</span><span style=\"color: #2c00d3\">\\</span><span style=\"color: #2100de\">/</span><span style=\"color: #1600e9\">_</span><span style=\"color: #0b00f4\">/</span></pre></div>"
+		},
+		"gradient named": {
+			"options": {
+				"colors": [
+					"red",
+					"var(--text-accent)"
+				]
+			},
+			"html": "<div class=\"sfb-figlet-display sfb-figlet-gradient\" style=\"display: flex; padding: 5px 0; justify-content: center\"><pre style=\"margin: 0; padding: 5px 0; border: none; font-family: monospace; white-space: pre; display: inline-block; font-size: 10px; line-height: 1\"><span style=\"color: red\">  _   _ _   </span><span style=\"color: var(--text-accent)\"> _____  __</span>\n<span style=\"color: red\"> | | | (_)  </span><span style=\"color: var(--text-accent)\">/ ( _ ) \\ \\</span>\n<span style=\"color: red\"> | |_| | | /</span><span style=\"color: var(--text-accent)\"> // _ \\/\\\\ \\</span>\n<span style=\"color: red\"> |  _  | | \\</span><span style=\"color: var(--text-accent)\"> \\ (_&gt;  &lt;/ /</span>\n<span style=\"color: red\"> |_| |_|_|  </span><span style=\"color: var(--text-accent)\">\\_\\___/\\/_/</span></pre></div>"
+		}
+	}
+}

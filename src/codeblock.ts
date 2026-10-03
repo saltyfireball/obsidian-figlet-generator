@@ -1,7 +1,7 @@
 import { type App, MarkdownPostProcessorContext } from "obsidian";
 import {
 	generateFigletText,
-	createFigletHtml,
+	renderFiglet,
 	getAvailableFonts,
 	isFontAvailable,
 	type FigletSettings,
@@ -233,12 +233,10 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 			// Multi-center mode: each line rendered and centered independently
 			if (options.multiCenter) {
 				const textLines = text.split("\n").filter((line) => line.trim().length > 0);
-				const htmlParts: string[] = [];
+				const figletTexts: string[] = [];
 
 				for (const line of textLines) {
-					const figletText = await generateFigletText(line.trim(), font);
-					const html = createFigletHtml(figletText, styleOptions);
-					htmlParts.push(html);
+					figletTexts.push(await generateFigletText(line.trim(), font));
 				}
 
 				// Remove loading state
@@ -247,14 +245,8 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 				// Wrap all in a container
 				el.empty();
 				const wrapper = el.createDiv({ cls: "sfb-figlet-multi-center" });
-				for (const part of htmlParts) {
-					const parsed = new DOMParser().parseFromString(`<div>${part}</div>`, "text/html");
-					const nodes = parsed.body.firstElementChild?.childNodes;
-					if (nodes) {
-						for (const node of Array.from(nodes)) {
-							wrapper.appendChild(document.importNode(node, true));
-						}
-					}
+				for (const figletText of figletTexts) {
+					renderFiglet(wrapper, figletText, styleOptions);
 				}
 			} else {
 				const figletText = await generateFigletText(text, font);
@@ -263,15 +255,8 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 				loadingEl.remove();
 
 				// Create the figlet display
-				const html = createFigletHtml(figletText, styleOptions);
 				el.empty();
-				const parsed = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
-				const nodes = parsed.body.firstElementChild?.childNodes;
-				if (nodes) {
-					for (const node of Array.from(nodes)) {
-						el.appendChild(document.importNode(node, true));
-					}
-				}
+				renderFiglet(el, figletText, styleOptions);
 			}
 			if (fontWarning) {
 				el.createEl("div", {
