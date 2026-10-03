@@ -113,7 +113,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	const updatePreviewSwatches = (colors: string[]) => {
 		colorPreviewRow.empty();
 		colors.forEach((color) => {
-			const swatch = colorPreviewRow.createEl("span", { cls: "fg-figlet-gradient-swatch" });
+			const swatch = colorPreviewRow.createSpan({ cls: "fg-figlet-gradient-swatch" });
 			swatch.setCssStyles({ backgroundColor: color });
 		});
 	};
@@ -128,7 +128,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		.addTextArea((text) => {
 			gradientTextArea = text.inputEl;
 			text
-				.setPlaceholder("#ff6188 #fc9867 #ffd866 ...")
+				.setPlaceholder("For example: #ff6188 #fc9867 #ffd866")
 				.setValue(gradientColors.join(" "))
 				.onChange((value) => {
 					const colors = value.split(/\s+/).filter((c) => c.trim().length > 0);
@@ -177,7 +177,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		copyBtn.addEventListener("click", () => { void (async () => {
 			await navigator.clipboard.writeText(code);
 			copyBtn.textContent = "Copied!";
-			setTimeout(() => {
+			window.setTimeout(() => {
 				copyBtn.textContent = "Copy";
 			}, 1500);
 		})(); });
@@ -346,5 +346,5 @@ function createFontItem(
 		renderFontList(searchInput.value);
 	});
 
-	item.createEl("span", { text: font, cls: "fg-figlet-font-name" });
+	item.createSpan({ text: font, cls: "fg-figlet-font-name" });
 }

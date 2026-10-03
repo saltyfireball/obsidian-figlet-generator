@@ -49,7 +49,7 @@ export class FigletModal extends Modal {
 		// Color input
 		const colorRow = contentEl.createDiv("fg-figlet-input-row");
 		colorRow.createEl("label", { text: "Color" });
-		const colorDesc = colorRow.createEl("div", {
+		const colorDesc = colorRow.createDiv({
 			cls: "fg-figlet-hint",
 		});
 		colorDesc.textContent = "Hex (#ff6188), CSS name (red), or 'rainbow' for gradient. Leave empty for default";
@@ -135,7 +135,7 @@ export class FigletModal extends Modal {
 
 			if (!text) {
 				previewContainer.empty();
-				previewContainer.createEl("pre").textContent = "(enter text above)";
+				previewContainer.createEl("pre").textContent = "(Enter text above)";
 				return;
 			}
 
