@@ -16,6 +16,7 @@ const ACCEPTED_INPUTS = {
 	"eight-digit hex": ["#FF0000FF", "#0000FFFF"],
 	"rgb()": ["rgb(255, 0, 0)", "rgb(0, 0, 255)"],
 	"percentage rgb()": ["rgb(100%, 0%, 0%)", "rgb(0%, 0%, 100%)"],
+	// Mixing numbers and percentages is invalid CSS: it bands by design
 	"mixed rgb() channels": ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"],
 	"named colors": ["red", "blue"],
 	"CSS variables": ["var(--text-accent)", "var(--text-error)"],
@@ -43,6 +44,29 @@ test("percentage rgb() blends the same as numeric rgb()", () => {
 	const num = spanColors(generator.createFigletHtml(ART, { colors: ["rgb(255, 0, 0)", "rgb(0, 0, 255)"] }));
 	assert.deepEqual(pct, num);
 	assert.ok(pct.length > 2, "expected a blend, not two bands");
+});
+
+for (const [label, from, to] of [
+	["space-separated numbers", "rgb(255 0 0)", "rgb(0 0 255 / 50%)"],
+	["space-separated percentages", "rgb(100% 0% 0%)", "rgba(0% 0% 100% / .5)"],
+	["percentages without a leading zero", "rgb(100%, .0%, 0%)", "rgb(.0%, 0%, 100%)"],
+]) {
+	test(`${label} blend the same as comma-separated numbers`, () => {
+		const got = spanColors(generator.createFigletHtml(ART, { colors: [from, to] }));
+		const num = spanColors(generator.createFigletHtml(ART, { colors: ["rgb(255, 0, 0)", "rgb(0, 0, 255)"] }));
+		assert.deepEqual(got, num);
+	});
+}
+
+test("a percentage below 1% without a leading zero blends", () => {
+	const colors = spanColors(generator.createFigletHtml(ART, { colors: ["rgb(.5%, 0%, 0%)", "rgb(0%, 0%, 100%)"] }));
+	assert.ok(colors.length > 2, "expected a blend, not two bands");
+	assert.equal(colors[0], "#010000");
+});
+
+test("mixed number and percentage channels band instead of blending", () => {
+	const colors = spanColors(generator.createFigletHtml(ART, { colors: ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"] }));
+	assert.deepEqual([...new Set(colors)], ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"]);
 });
 
 test("fractional percentages round to the nearest channel value", () => {

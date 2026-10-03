@@ -10,8 +10,8 @@ function sanitizeColor(color: string): string {
 	const trimmed = color.trim();
 	// Allow hex colors
 	if (/^#[0-9A-Fa-f]{3,8}$/.test(trimmed)) return trimmed;
-	// Allow rgb/rgba
-	if (/^rgba?\(\s*[\d.,\s%]+\)$/i.test(trimmed)) return trimmed;
+	// Allow rgb/rgba, comma or space separated (with "/ alpha")
+	if (/^rgba?\(\s*[\d.,\s%/]+\)$/i.test(trimmed)) return trimmed;
 	// Allow hsl/hsla
 	if (/^hsla?\(\s*[\d.,\s%deg]+\)$/i.test(trimmed)) return trimmed;
 	// Allow CSS named colors (basic set) and CSS variables
@@ -177,6 +177,13 @@ export async function generateFigletText(
 
 type Rgb = [number, number, number];
 
+// A CSS number (5, 5.5 or .5), then an optional % sign
+const RGB_CHANNEL = String.raw`(\d+(?:\.\d+)?|\.\d+)(%?)`;
+const RGB_ALPHA = String.raw`(?:\d+(?:\.\d+)?|\.\d+)%?`;
+// rgb(255, 0, 0) / rgba(255, 0, 0, 0.5), and CSS4 rgb(255 0 0) / rgb(255 0 0 / 50%)
+const RGB_COMMA = new RegExp(String.raw`^rgba?\(\s*${RGB_CHANNEL}\s*,\s*${RGB_CHANNEL}\s*,\s*${RGB_CHANNEL}\s*(?:,\s*${RGB_ALPHA}\s*)?\)$`, "i");
+const RGB_SPACE = new RegExp(String.raw`^rgba?\(\s*${RGB_CHANNEL}\s+${RGB_CHANNEL}\s+${RGB_CHANNEL}\s*(?:\/\s*${RGB_ALPHA}\s*)?\)$`, "i");
+
 /**
  * Parse a hex (#rgb, #rgba, #rrggbb, #rrggbbaa) or rgb()/rgba() color into
  * its red, green and blue channels. Alpha is dropped. Returns null for
@@ -191,16 +198,14 @@ function parseRgb(color: string): Rgb | null {
 		return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
 	}
 
+	const fn = RGB_COMMA.exec(color) ?? RGB_SPACE.exec(color);
+	if (!fn) return null;
 	// Channels are all numbers (0-255) or all percentages, as CSS requires
-	const num = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
-	if (num) {
-		return [num[1], num[2], num[3]].map((c) => Math.min(255, Math.round(Number(c)))) as Rgb;
-	}
-	const pct = /^rgba?\(\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
-	if (pct) {
-		return [pct[1], pct[2], pct[3]].map((c) => Math.min(255, Math.round((Number(c) * 255) / 100))) as Rgb;
-	}
-	return null;
+	const percent = fn[2] === "%";
+	if (fn[4] !== fn[2] || fn[6] !== fn[2]) return null;
+	return [fn[1], fn[3], fn[5]].map((c) =>
+		Math.min(255, Math.round(percent ? (Number(c) * 255) / 100 : Number(c))),
+	) as Rgb;
 }
 
 function toHex([r, g, b]: Rgb): string {
