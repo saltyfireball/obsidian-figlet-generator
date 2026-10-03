@@ -241,6 +241,10 @@ Configure plugin behavior in Settings > Figlet Generator:
 
 The plugin ships with 326 fonts from the Figlet font library, bundled inside the plugin so nothing extra needs installing. Fonts are loaded on-demand to minimize memory usage and automatically unloaded after text generation.
 
+### About the font data in main.js
+
+Most of `main.js` (about 1.5 MB) is font data, not code. At build time, [`scripts/figlet-fonts-plugin.mjs`](scripts/figlet-fonts-plugin.mjs) reads each font listed in [`src/font-list.json`](src/font-list.json) from the [figlet](https://www.npmjs.com/package/figlet) package's `fonts/` folder, gzips it and embeds it as a base64 string, because the community directory installs only `main.js`, `manifest.json` and `styles.css`. Each string decodes back to the original `.flf` text file when a font is first used, and the tests check that every one matches its source file byte for byte. Nothing in it is executable code.
+
 Some popular fonts:
 
 - Standard

@@ -169,7 +169,7 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 		}
 
 		if (!text) {
-			el.createEl("div", {
+			el.createDiv({
 				text: "No text provided for figlet",
 				cls: "sfb-figlet-error",
 			});
@@ -225,7 +225,7 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 
 		try {
 			// Show loading state
-			const loadingEl = el.createEl("div", {
+			const loadingEl = el.createDiv({
 				text: "Generating...",
 				cls: "sfb-figlet-loading",
 			});
@@ -259,13 +259,13 @@ export function createFigletCodeBlockProcessor(getSettings: () => FigletSettings
 				renderFiglet(el, figletText, styleOptions);
 			}
 			if (fontWarning) {
-				el.createEl("div", {
+				el.createDiv({
 					text: fontWarning,
 					cls: "sfb-figlet-font-warning",
 				});
 			}
 		} catch (err) {
-			el.createEl("div", {
+			el.createDiv({
 				text: `Error generating figlet: ${String(err)}`,
 				cls: "sfb-figlet-error",
 			});

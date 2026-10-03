@@ -27,5 +27,14 @@ for (const [label, { options, html }] of Object.entries(golden.cases)) {
 test("text is escaped in the HTML, not interpreted", () => {
 	const html = generator.createFigletHtml('<img src=x onerror="alert(1)">');
 	assert.doesNotMatch(html, /<img/);
-	assert.match(html, /&lt;img src=x onerror=&quot;alert\(1\)&quot;&gt;/);
+	assert.match(html, /&lt;img src=x onerror="alert\(1\)"&gt;/);
+});
+
+test("double quotes in figlet text stay as they were inserted before", () => {
+	const art = ' _ _ \n( " )\n';
+	const pre = /<pre[^>]*>([\s\S]*)<\/pre>/;
+	assert.equal(pre.exec(generator.createFigletHtml(art))[1], ' _ _\n( " )');
+	const gradient = generator.createFigletHtml(art, { colors: ["#ff0000", "#0000ff"] });
+	assert.match(gradient, /"<\/span>|">"/);
+	assert.doesNotMatch(gradient, /&quot;/);
 });
