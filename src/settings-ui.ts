@@ -138,7 +138,8 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 						updatePreviewSwatches(colors);
 					}
 				});
-			text.inputEl.rows = 2;
+			// Three rows: the default seven colors wrap onto a third line
+			text.inputEl.rows = 3;
 			text.inputEl.setCssStyles({ width: "100%", fontFamily: "var(--font-monospace)" });
 		});
 

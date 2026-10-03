@@ -191,9 +191,14 @@ function parseRgb(color: string): Rgb | null {
 		return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
 	}
 
-	const fn = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
-	if (fn) {
-		return [fn[1], fn[2], fn[3]].map((c) => Math.min(255, Math.round(Number(c)))) as Rgb;
+	// Channels are all numbers (0-255) or all percentages, as CSS requires
+	const num = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
+	if (num) {
+		return [num[1], num[2], num[3]].map((c) => Math.min(255, Math.round(Number(c)))) as Rgb;
+	}
+	const pct = /^rgba?\(\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
+	if (pct) {
+		return [pct[1], pct[2], pct[3]].map((c) => Math.min(255, Math.round((Number(c) * 255) / 100))) as Rgb;
 	}
 	return null;
 }
