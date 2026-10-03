@@ -184,6 +184,8 @@ load_text: frontmatter
 | `color: #FF0000 #FFFF00 #00FF00` | 3-color gradient |
 | `color: rainbow` or `color: gradient` | Palette from settings |
 
+Gradients blend smoothly between hex and `rgb()`/`rgba()` stops, with channels as numbers (`rgb(255, 0, 0)`) or percentages (`rgb(100%, 0%, 0%)`). With any other stop (a named color, a CSS variable, `hsl()`), each part of the text takes its nearest stop instead, in bands.
+
 #### Examples
 
 ````
