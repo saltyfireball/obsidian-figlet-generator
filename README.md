@@ -294,6 +294,10 @@ interface FigletHtmlOptions {
 - Very large text may be slow to render
 - Some fonts do not include every character
 
+## About the font data in main.js
+
+Most of `main.js` (about 1.5 MB) is font data, not code. At build time, [`scripts/figlet-fonts-plugin.mjs`](scripts/figlet-fonts-plugin.mjs) reads each font listed in [`src/font-list.json`](src/font-list.json) from the [figlet](https://www.npmjs.com/package/figlet) package's `fonts/` folder, gzips it and embeds it as a base64 string, because the community directory installs only `main.js`, `manifest.json` and `styles.css`. Each string decodes back to the original `.flf` text file when a font is first used, and the tests check that every one matches its source file byte for byte. Nothing in it is executable code.
+
 ## Making the README media
 
 The screenshots and GIFs in `assets/media/` come from the real plugin in headless Chromium. See `tools/readme-media/capture.mjs`.
