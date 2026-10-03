@@ -317,12 +317,13 @@ function layoutFiglet(figletText: string, options?: FigletStyleOptions): FigletL
 	};
 }
 
+// Text keeps double quotes as-is, matching HTML inserted by earlier versions
 function escapeHtml(text: string): string {
-	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function styleAttr(styles: [string, string][]): string {
-	return escapeHtml(styles.map(([k, v]) => `${k}: ${v}`).join("; "));
+	return escapeHtml(styles.map(([k, v]) => `${k}: ${v}`).join("; ")).replace(/"/g, "&quot;");
 }
 
 /**

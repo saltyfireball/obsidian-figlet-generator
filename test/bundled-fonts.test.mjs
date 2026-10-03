@@ -12,11 +12,25 @@ test("renders Standard without a fonts folder", async () => {
 	assert.match(art, /\|/);
 });
 
-test("every listed font is bundled as a valid figlet font", async () => {
+test("every listed font decodes to exactly its source file", async () => {
 	const list = JSON.parse(readFileSync(join(root, "src/font-list.json"), "utf8"));
 	for (const font of list) {
 		const data = await bundledFonts.readBundledFont(font);
-		assert.match(data ?? "", /^\uFEFF?[ft]lf2a/, `font ${font} is missing or not a figlet font`);
+		// TextDecoder drops a leading byte-order mark, as reading the file did
+		const source = readFileSync(join(root, "node_modules/figlet/fonts", `${font}.flf`), "utf8").replace(/^\uFEFF/, "");
+		assert.ok(data === source, `font ${font} does not match node_modules/figlet/fonts/${font}.flf`);
+		assert.match(data, /^[ft]lf2a/, `font ${font} is not a figlet font`);
+	}
+});
+
+test("works without DecompressionStream (older iOS)", async () => {
+	const saved = globalThis.DecompressionStream;
+	delete globalThis.DecompressionStream;
+	try {
+		const art = await generator.generateFigletText("Hi", "Big");
+		assert.ok(art.split("\n").length >= 4);
+	} finally {
+		globalThis.DecompressionStream = saved;
 	}
 });
 
