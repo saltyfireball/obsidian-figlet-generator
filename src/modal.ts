@@ -4,6 +4,7 @@ import type { FigletSettings } from "./generator";
 import {
 	generateFigletText,
 	createFigletHtml,
+	renderFiglet,
 	AVAILABLE_FONTS,
 	type FigletStyleOptions,
 } from "./generator";
@@ -141,17 +142,10 @@ export class FigletModal extends Modal {
 			try {
 				const figletText = await generateFigletText(text, font);
 				const styleOptions = this.buildStyleOptions(selectedColor);
-				const html = createFigletHtml(figletText, styleOptions);
 
-				// Render the actual HTML into the preview
+				// Render the same output the insert produces into the preview
 				previewContainer.empty();
-				const parsed = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
-				const nodes = parsed.body.firstElementChild?.childNodes;
-				if (nodes) {
-					for (const node of Array.from(nodes)) {
-						previewContainer.appendChild(document.importNode(node, true));
-					}
-				}
+				renderFiglet(previewContainer, figletText, styleOptions);
 			} catch {
 				previewContainer.empty();
 				const pre = previewContainer.createEl("pre");
