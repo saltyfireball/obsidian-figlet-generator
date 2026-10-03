@@ -6,6 +6,13 @@ import { gzipSync } from "node:zlib";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
+ * Where the bundled fonts come from. The fonts module is virtual, so the
+ * esbuild metafile does not show this path: the build passes it to
+ * licenseNotices so figlet is credited for its fonts on their own.
+ */
+export const figletFontsDir = "node_modules/figlet/fonts";
+
+/**
  * esbuild plugin: serves `virtual:figlet-fonts`, a map of font name to its
  * gzipped .flf as base64, built from src/font-list.json. The community
  * directory ships only main.js, manifest.json and styles.css, so the fonts
@@ -21,7 +28,7 @@ export function figletFontsPlugin() {
 			}));
 			build.onLoad({ filter: /.*/, namespace: "figlet-fonts" }, () => {
 				const listPath = join(root, "src/font-list.json");
-				const fontsDir = join(root, "node_modules/figlet/fonts");
+				const fontsDir = join(root, figletFontsDir);
 				const names = JSON.parse(readFileSync(listPath, "utf8"));
 				const fonts = {};
 				for (const name of names) {

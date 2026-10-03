@@ -101,7 +101,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	// Gradient Colors Section
 	new Setting(section).setName("Rainbow / gradient colors").setHeading();
 	section.createEl("p", {
-		text: "Colors used when 'color: rainbow' is set, or when using the 'colors:' option.",
+		text: "Colors used for 'color: rainbow' or 'color: gradient'. A list of colors in a code block uses its own colors.",
 		cls: "fg-hint",
 	});
 

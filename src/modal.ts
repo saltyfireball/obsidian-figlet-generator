@@ -9,9 +9,13 @@ import {
 	type FigletStyleOptions,
 } from "./generator";
 
+export interface FigletModalSettings extends FigletSettings {
+	codeBlockId?: string;
+}
+
 export interface FigletModalPlugin {
 	app: App;
-	settings: FigletSettings;
+	settings: FigletModalSettings;
 	saveSettings(): Promise<void>;
 }
 
@@ -183,7 +187,7 @@ export class FigletModal extends Modal {
 
 			try {
 				if (outputMode === "codeblock") {
-					const codeBlock = this.buildCodeBlock(text, font, selectedColor);
+					const codeBlock = buildCodeBlock(this.plugin.settings, text, font, selectedColor);
 					this.editor.replaceSelection(codeBlock);
 				} else {
 					const figletText = await generateFigletText(text, font);
@@ -219,29 +223,32 @@ export class FigletModal extends Modal {
 		};
 	}
 
-	private buildCodeBlock(text: string, font: string, color: string): string {
-		const settings = this.plugin.settings;
-		const lines: string[] = [];
-		lines.push("```sfb-figlet");
-		lines.push(`font: ${font}`);
-
-		if (color === "rainbow" || color === "gradient") {
-			lines.push(`colors: ${settings.gradientColors.join(" ")}`);
-		} else if (color) {
-			lines.push(`color: ${color}`);
-		}
-
-		lines.push(`font-size: ${settings.fontSize ?? 10}`);
-		lines.push(`line-height: ${settings.lineHeight ?? 1}`);
-		lines.push(`centered: ${settings.centered ?? true}`);
-		lines.push("---");
-		lines.push(text);
-		lines.push("```");
-
-		return lines.join("\n");
-	}
-
 	onClose() {
 		this.contentEl.empty();
 	}
+}
+
+/**
+ * Build the code block the insert dialog inserts, fenced with the language
+ * ID from settings so it still renders after the user changes it
+ */
+export function buildCodeBlock(settings: FigletModalSettings, text: string, font: string, color: string): string {
+	const lines: string[] = [];
+	lines.push("```" + (settings.codeBlockId || "sfb-figlet"));
+	lines.push(`font: ${font}`);
+
+	if (color === "rainbow" || color === "gradient") {
+		lines.push(`colors: ${settings.gradientColors.join(" ")}`);
+	} else if (color) {
+		lines.push(`color: ${color}`);
+	}
+
+	lines.push(`font-size: ${settings.fontSize ?? 10}`);
+	lines.push(`line-height: ${settings.lineHeight ?? 1}`);
+	lines.push(`centered: ${settings.centered ?? true}`);
+	lines.push("---");
+	lines.push(text);
+	lines.push("```");
+
+	return lines.join("\n");
 }

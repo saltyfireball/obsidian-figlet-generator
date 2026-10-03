@@ -39,3 +39,27 @@ test("an unknown font falls back to Standard", async () => {
 	const standard = await generator.generateFigletText("Hi", "Standard");
 	assert.equal(fallback, standard);
 });
+
+test("font pickers list miniwi, which has no capitalised twin", () => {
+	assert.ok(generator.getAvailableFonts().includes("miniwi"));
+});
+
+test("font pickers hide only lowercase fonts that alias another font", () => {
+	const list = JSON.parse(readFileSync(join(root, "src/font-list.json"), "utf8"));
+	const shown = new Set(generator.getAvailableFonts());
+	for (const font of list) {
+		if (shown.has(font)) continue;
+		const twin = list.find((f) => f !== font && f.toLowerCase() === font.toLowerCase());
+		assert.ok(twin && shown.has(twin), `font ${font} is hidden but has no listed twin`);
+	}
+});
+
+// figlet 1.12 fixed this glyph (1.10 drew it differently). The fonts ship
+// inside main.js, so a figlet upgrade that changes them must show up here.
+test("3D-ASCII draws lowercase y as figlet 1.12 does", async () => {
+	const art = await generator.generateFigletText("y", "3D-ASCII");
+	assert.equal(
+		art,
+		"  ___    ___ \n |\\  \\  /  /|\n \\ \\  \\/  / /\n  \\ \\    / / \n   \\/   / /  \n __/   / /   \n|\\____/ /    \n\\|____|/     \n             \n             ",
+	);
+});
