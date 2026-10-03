@@ -16,6 +16,7 @@
 		"strictBindCallApply": true,
 		"allowSyntheticDefaultImports": true,
 		"useUnknownInCatchVariables": true,
+		"resolveJsonModule": true,
 		"lib": [
 			"DOM",
 			"ES5",

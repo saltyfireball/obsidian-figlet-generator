@@ -1,6 +1,5 @@
 import { Plugin, PluginSettingTab, App, type Editor } from "obsidian";
 import {
-	initFiglet,
 	generateFigletText,
 	createFigletHtml,
 	DEFAULT_FIGLET_SETTINGS,
@@ -37,11 +36,6 @@ export default class FigletGeneratorPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-
-		// Initialize figlet with plugin directory for font loading
-		if (this.manifest.dir) {
-			initFiglet(this.app, this.manifest.dir);
-		}
 
 		// Register code block processor using configurable ID
 		this.registerMarkdownCodeBlockProcessor(
