@@ -253,12 +253,17 @@ const scenes = {
 		const { page } = await openPage(browser, { width: 900, height: 1600 });
 		await page.evaluate(() => window.figlet.showSettings(document.getElementById("root")));
 		await page.waitForTimeout(500);
-		await shot(page, "settings.png");
+		// The full tab lists every font; keep the top sections only.
+		const b = await page.locator("#root").boundingBox();
+		const t = await page.locator("#root textarea").first().boundingBox();
+		const height = t.y + t.height + 24 - b.y;
+		await page.screenshot({ path: join(out, "settings.png"), clip: { x: b.x, y: b.y, width: b.width, height } });
+		console.log("wrote settings.png");
 	},
 
 	// Typing in the code block source re-renders the art, as in Obsidian.
 	async live(browser) {
-		const rec = await openPage(browser, { width: 1100, height: 520, video: true });
+		const rec = await openPage(browser, { width: 1100, height: 520, video: true, settings: { fontSize: 14 } });
 		const { page } = rec;
 		await page.evaluate(() => {
 			const root = document.getElementById("root");
@@ -284,7 +289,7 @@ const scenes = {
 			"font: Big\ncolor: #FF6188\n---\nHi",
 			"font: Big\ncolor: rainbow\n---\nHi",
 			"font: Big\ncolor: rainbow\n---\nHi there",
-			"font: ANSI Shadow\ncolor: rainbow\nfont-size: 8\n---\nHi there",
+			"font: ANSI Shadow\ncolor: rainbow\nfont-size: 11\n---\nHi there",
 		];
 		await show(steps[0]);
 		await page.waitForTimeout(900);

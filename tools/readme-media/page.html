@@ -90,7 +90,7 @@
 		cursor: pointer;
 	}
 	button.mod-cta { background: var(--interactive-accent); color: var(--text-on-accent); border-color: transparent; }
-	input[type=text], input:not([type]), textarea, select {
+	input[type=text], input[type=number], input:not([type]), textarea, select {
 		background: var(--background-modifier-form-field);
 		color: var(--text-normal);
 		border: 1px solid var(--background-modifier-border);
@@ -127,7 +127,8 @@
 	.setting-item-heading .setting-item-name { font-weight: 600; font-size: 1.05em; }
 	.setting-item-info { flex: 1; }
 	.setting-item-description { color: var(--text-muted); font-size: 0.85em; }
-	.setting-item-control textarea { width: 260px; min-height: 60px; }
+	.setting-item-control textarea { width: 260px; min-height: 90px; }
+	.setting-item-control input[type=number] { width: 90px; }
 	.checkbox-container {
 		width: 40px; height: 22px; border-radius: 11px; background: var(--background-secondary-alt); position: relative;
 	}
