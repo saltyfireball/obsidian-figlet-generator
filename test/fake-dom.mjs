@@ -2,7 +2,8 @@
 // createSpan, appendText, setCssStyles) to run renderFiglet in node, plus a
 // serializer that writes HTML the way createFigletHtml does.
 
-const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const escapeAttr = (s) => escape(s).replace(/"/g, "&quot;");
 const kebab = (k) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 export class FakeElement {
@@ -39,7 +40,7 @@ export class FakeElement {
 
 	toHtml() {
 		const cls = this.classes.length ? ` class="${this.classes.join(" ")}"` : "";
-		const style = this.styles.length ? ` style="${escape(this.styles.map(([k, v]) => `${k}: ${v}`).join("; "))}"` : "";
+		const style = this.styles.length ? ` style="${escapeAttr(this.styles.map(([k, v]) => `${k}: ${v}`).join("; "))}"` : "";
 		const inner = this.children.map((c) => (typeof c === "string" ? escape(c) : c.toHtml())).join("");
 		return `<${this.tag}${cls}${style}>${inner}</${this.tag}>`;
 	}

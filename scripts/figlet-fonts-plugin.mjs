@@ -29,7 +29,9 @@ export function figletFontsPlugin() {
 					fonts[name] = gzipSync(flf, { level: 9 }).toString("base64");
 				}
 				return {
-					contents: `export default ${JSON.stringify(fonts)};`,
+					// The comment survives minify (legal comment) so a reader of
+					// main.js can tell this blob is font data, not code.
+					contents: `/*! Figlet fonts: each value is a gzipped .flf font file from the figlet npm package, base64 encoded. Built by scripts/figlet-fonts-plugin.mjs; see README "About the font data in main.js". */\nexport default ${JSON.stringify(fonts)};`,
 					loader: "js",
 					watchFiles: [listPath],
 				};
