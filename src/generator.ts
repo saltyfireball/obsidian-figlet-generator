@@ -49,21 +49,18 @@ function resolveFontName(input: string): string {
 }
 
 /**
- * Load a font bundled into main.js
+ * Read a font bundled into main.js, or null if it is missing or unreadable
  */
-async function loadFont(fontName: string): Promise<boolean> {
-	const resolved = resolveFontName(fontName);
+async function readFont(fontName: string): Promise<string | null> {
 	try {
-		const fontData = await readBundledFont(resolved);
+		const fontData = await readBundledFont(fontName);
 		if (fontData === null) {
 			console.warn(`Figlet: font "${fontName}" not found, falling back to Standard`);
-			return false;
 		}
-		figletLib.parseFont(resolved, fontData);
-		return true;
+		return fontData;
 	} catch (err) {
 		console.warn(`Figlet: font "${fontName}" failed to load, falling back to Standard`, err);
-		return false;
+		return null;
 	}
 }
 
@@ -146,36 +143,29 @@ export function isFontAvailable(fontName: string): boolean {
 
 /**
  * Generate figlet text asynchronously
- * Loads font, generates text, then unloads to free memory
+ * Reads the font, then parses, renders and unloads it in one synchronous step.
+ * Renders run concurrently (one per code block), and each one unloads every
+ * font, so nothing may await between parsing a font and rendering with it.
  */
 export async function generateFigletText(
 	text: string,
 	font: string = "Standard",
 ): Promise<string> {
 	font = resolveFontName(font);
-	const loaded = await loadFont(font);
-	if (!loaded) {
-		await loadFont("Standard");
+	let fontData = await readFont(font);
+	if (fontData === null) {
 		font = "Standard";
+		fontData = await readFont(font);
+		if (fontData === null) throw new Error("Figlet: the Standard font is missing from the bundle");
 	}
 
-	return new Promise((resolve, reject) => {
-		const opts: { font: string } = { font };
-		void (figletLib.text as (txt: string, options: { font: string }, cb: (err: Error | null, result?: string) => void) => void)(
-			text,
-			opts,
-			(err: Error | null, result: string | undefined) => {
-				// Unload fonts after generation to free memory
-				unloadFonts();
-
-				if (err) {
-					reject(err);
-					return;
-				}
-				resolve(result || "");
-			},
-		);
-	});
+	try {
+		figletLib.parseFont(font, fontData);
+		return figletLib.textSync(text, { font });
+	} finally {
+		// Unload fonts after generation to free memory
+		unloadFonts();
+	}
 }
 
 type Rgb = [number, number, number];

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadSrc, root } from "./bundle.mjs";
 
-const [generator, bundledFonts] = await loadSrc("generator", "bundled-fonts");
+const [generator, bundledFonts] = await loadSrc(["generator", "bundled-fonts"]);
 
 test("renders Standard without a fonts folder", async () => {
 	const art = await generator.generateFigletText("Hi", "Standard");

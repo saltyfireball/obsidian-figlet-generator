@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadSrc } from "./bundle.mjs";
 
-const [generator] = await loadSrc("generator");
+const [generator] = await loadSrc(["generator"]);
 
 const ART = "ABCDEFGHIJ\nABCDEFGHIJ";
 
