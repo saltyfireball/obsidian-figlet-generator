@@ -178,38 +178,50 @@ export async function generateFigletText(
 	});
 }
 
+type Rgb = [number, number, number];
+
 /**
- * Interpolate between two hex colors
+ * Parse a hex (#rgb, #rgba, #rrggbb, #rrggbbaa) or rgb()/rgba() color into
+ * its red, green and blue channels. Alpha is dropped. Returns null for
+ * anything else (named colors, var(--x), hsl), which cannot be mixed here.
  */
-function interpolateColor(color1: string, color2: string, factor: number): string {
-	const hex = (c: string) => parseInt(c, 16);
-	const r1 = hex(color1.slice(1, 3));
-	const g1 = hex(color1.slice(3, 5));
-	const b1 = hex(color1.slice(5, 7));
-	const r2 = hex(color2.slice(1, 3));
-	const g2 = hex(color2.slice(3, 5));
-	const b2 = hex(color2.slice(5, 7));
+function parseRgb(color: string): Rgb | null {
+	const hex = /^#([0-9a-f]{3,8})$/i.exec(color)?.[1];
+	if (hex && (hex.length === 3 || hex.length === 4)) {
+		return [0, 1, 2].map((i) => parseInt(hex[i] + hex[i], 16)) as Rgb;
+	}
+	if (hex && (hex.length === 6 || hex.length === 8)) {
+		return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
+	}
 
-	const r = Math.round(r1 + (r2 - r1) * factor);
-	const g = Math.round(g1 + (g2 - g1) * factor);
-	const b = Math.round(b1 + (b2 - b1) * factor);
+	const fn = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*(?:,\s*[\d.]+%?\s*)?\)$/i.exec(color);
+	if (fn) {
+		return [fn[1], fn[2], fn[3]].map((c) => Math.min(255, Math.round(Number(c)))) as Rgb;
+	}
+	return null;
+}
 
-	return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+function toHex([r, g, b]: Rgb): string {
+	return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /**
- * Get color at position along gradient
+ * Get color at position along gradient. Stops that all parse to RGB are
+ * blended smoothly; otherwise each position takes its nearest stop, so named
+ * colors and CSS variables still band across the text instead of breaking.
  */
 function getGradientColor(colors: string[], position: number): string {
 	if (colors.length === 1) return colors[0];
-	if (position <= 0) return colors[0];
-	if (position >= 1) return colors[colors.length - 1];
 
-	const scaledPos = position * (colors.length - 1);
-	const index = Math.floor(scaledPos);
+	const scaledPos = Math.min(Math.max(position, 0), 1) * (colors.length - 1);
+	const index = Math.min(Math.floor(scaledPos), colors.length - 2);
 	const factor = scaledPos - index;
 
-	return interpolateColor(colors[index], colors[index + 1], factor);
+	const from = parseRgb(colors[index]);
+	const to = parseRgb(colors[index + 1]);
+	if (!from || !to) return colors[Math.round(scaledPos)];
+
+	return toHex(from.map((c, i) => Math.round(c + (to[i] - c) * factor)) as Rgb);
 }
 
 /**
