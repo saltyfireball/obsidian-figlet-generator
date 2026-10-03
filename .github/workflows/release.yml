@@ -9,6 +9,10 @@ on:
       tag:
         description: "Tag to release (must already exist)"
         required: true
+      dry_run:
+        description: "Build, upload and download only: no attestation, no release"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -71,7 +75,13 @@ jobs:
         with:
           name: release-files
 
+      - name: Check release files
+        run: ls -l main.js manifest.json styles.css
+
+      # A dry run (workflow_dispatch with dry_run) stops here; a tag push has
+      # no inputs, so it always attests and releases
       - name: Attest build provenance
+        if: ${{ !inputs.dry_run }}
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
@@ -80,6 +90,7 @@ jobs:
             styles.css
 
       - name: Create Release
+        if: ${{ !inputs.dry_run }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}

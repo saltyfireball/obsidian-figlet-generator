@@ -56,3 +56,10 @@ test("npm runs only in the job without write or OIDC tokens", () => {
 	assert.match(build, /persist-credentials: false/);
 	assert.doesNotMatch(release, /npm |actions\/checkout/);
 });
+
+test("a dry run skips the attestation and the release", () => {
+	assert.match(workflow, /dry_run:\n\s+description: .*\n\s+type: boolean\n\s+default: false/);
+	for (const step of ["Attest build provenance", "Create Release"]) {
+		assert.match(workflow, new RegExp(`- name: ${step}\\n\\s+if: \\$\\{\\{ !inputs\\.dry_run \\}\\}\\n`), `${step} is not skipped on a dry run`);
+	}
+});
