@@ -50,6 +50,9 @@ for (const [label, from, to] of [
 	["space-separated numbers", "rgb(255 0 0)", "rgb(0 0 255 / 50%)"],
 	["space-separated percentages", "rgb(100% 0% 0%)", "rgba(0% 0% 100% / .5)"],
 	["percentages without a leading zero", "rgb(100%, .0%, 0%)", "rgb(.0%, 0%, 100%)"],
+	// Out-of-range channels clamp to 0-255, as CSS does
+	["negative and exponent numbers", "rgb(2.55e2 -10 0)", "rgb(0, -1, 300)"],
+	["the none keyword", "rgb(255 none 0)", "rgb(none 0 255 / none)"],
 ]) {
 	test(`${label} blend the same as comma-separated numbers`, () => {
 		const got = spanColors(generator.createFigletHtml(ART, { colors: [from, to] }));
@@ -67,6 +70,13 @@ test("a percentage below 1% without a leading zero blends", () => {
 test("mixed number and percentage channels band instead of blending", () => {
 	const colors = spanColors(generator.createFigletHtml(ART, { colors: ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"] }));
 	assert.deepEqual([...new Set(colors)], ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"]);
+});
+
+test("malformed rgb() is rejected, not passed to the style attribute", () => {
+	for (const bad of ["rgb(1 / 2 / 3)", "rgb(1, 2 3)", "rgb(none, 0, 0)", "rgb(none% 0 0)", "rgb(1 2 3 4)"]) {
+		const colors = spanColors(generator.createFigletHtml(ART, { colors: [bad, "rgb(0, 0, 255)"] }));
+		assert.ok(!colors.includes(bad), `${bad} reached the style attribute`);
+	}
 });
 
 test("fractional percentages round to the nearest channel value", () => {

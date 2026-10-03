@@ -2,6 +2,17 @@ import figletLib from "figlet";
 import { readBundledFont } from "./bundled-fonts";
 import fontList from "./font-list.json";
 
+// A CSS number (5, -5, 5.5, .5 or 1e2) with an optional % sign. The CSS4 space
+// form also takes the keyword "none" (0); the comma form does not
+const CSS_NUMBER = String.raw`[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d+)?%?`;
+const COMMA_CHANNEL = `(${CSS_NUMBER})`;
+const SPACE_CHANNEL = `(${CSS_NUMBER}|none)`;
+// rgb(255, 0, 0) / rgba(255, 0, 0, 0.5), and CSS4 rgb(255 0 0) / rgb(255 0 0 / 50%).
+// Alpha is matched for shape only: it is dropped when blending, and the
+// browser clamps an out-of-range alpha to 0-1 (CSS Color 4)
+const RGB_COMMA = new RegExp(String.raw`^rgba?\(\s*${COMMA_CHANNEL}\s*,\s*${COMMA_CHANNEL}\s*,\s*${COMMA_CHANNEL}\s*(?:,\s*${CSS_NUMBER}\s*)?\)$`, "i");
+const RGB_SPACE = new RegExp(String.raw`^rgba?\(\s*${SPACE_CHANNEL}\s+${SPACE_CHANNEL}\s+${SPACE_CHANNEL}\s*(?:\/\s*(?:${CSS_NUMBER}|none)\s*)?\)$`, "i");
+
 /**
  * Sanitize a CSS color value to prevent injection
  * Only allows safe color formats: hex, rgb/rgba, hsl/hsla, named colors
@@ -10,8 +21,8 @@ function sanitizeColor(color: string): string {
 	const trimmed = color.trim();
 	// Allow hex colors
 	if (/^#[0-9A-Fa-f]{3,8}$/.test(trimmed)) return trimmed;
-	// Allow rgb/rgba, comma or space separated (with "/ alpha")
-	if (/^rgba?\(\s*[\d.,\s%/]+\)$/i.test(trimmed)) return trimmed;
+	// Allow rgb/rgba, comma or space separated (with "/ alpha"), in the shapes parseRgb reads
+	if (RGB_COMMA.test(trimmed) || RGB_SPACE.test(trimmed)) return trimmed;
 	// Allow hsl/hsla
 	if (/^hsla?\(\s*[\d.,\s%deg]+\)$/i.test(trimmed)) return trimmed;
 	// Allow CSS named colors (basic set) and CSS variables
@@ -177,13 +188,6 @@ export async function generateFigletText(
 
 type Rgb = [number, number, number];
 
-// A CSS number (5, 5.5 or .5), then an optional % sign
-const RGB_CHANNEL = String.raw`(\d+(?:\.\d+)?|\.\d+)(%?)`;
-const RGB_ALPHA = String.raw`(?:\d+(?:\.\d+)?|\.\d+)%?`;
-// rgb(255, 0, 0) / rgba(255, 0, 0, 0.5), and CSS4 rgb(255 0 0) / rgb(255 0 0 / 50%)
-const RGB_COMMA = new RegExp(String.raw`^rgba?\(\s*${RGB_CHANNEL}\s*,\s*${RGB_CHANNEL}\s*,\s*${RGB_CHANNEL}\s*(?:,\s*${RGB_ALPHA}\s*)?\)$`, "i");
-const RGB_SPACE = new RegExp(String.raw`^rgba?\(\s*${RGB_CHANNEL}\s+${RGB_CHANNEL}\s+${RGB_CHANNEL}\s*(?:\/\s*${RGB_ALPHA}\s*)?\)$`, "i");
-
 /**
  * Parse a hex (#rgb, #rgba, #rrggbb, #rrggbbaa) or rgb()/rgba() color into
  * its red, green and blue channels. Alpha is dropped. Returns null for
@@ -200,12 +204,16 @@ function parseRgb(color: string): Rgb | null {
 
 	const fn = RGB_COMMA.exec(color) ?? RGB_SPACE.exec(color);
 	if (!fn) return null;
-	// Channels are all numbers (0-255) or all percentages, as CSS requires
-	const percent = fn[2] === "%";
-	if (fn[4] !== fn[2] || fn[6] !== fn[2]) return null;
-	return [fn[1], fn[3], fn[5]].map((c) =>
-		Math.min(255, Math.round(percent ? (Number(c) * 255) / 100 : Number(c))),
-	) as Rgb;
+	const channels = [fn[1], fn[2], fn[3]].map((c) => c.toLowerCase());
+	// Channels are all numbers (0-255) or all percentages, as CSS requires;
+	// "none" goes with either
+	const units = new Set(channels.filter((c) => c !== "none").map((c) => c.endsWith("%")));
+	if (units.size > 1) return null;
+	const percent = units.has(true);
+	return channels.map((c) => {
+		const n = c === "none" ? 0 : Number(c.replace("%", ""));
+		return Math.min(255, Math.max(0, Math.round(percent ? (n * 255) / 100 : n)));
+	}) as Rgb;
 }
 
 function toHex([r, g, b]: Rgb): string {
