@@ -32,12 +32,6 @@ jobs:
           npm install
           npm run build
 
-      - name: Package fonts
-        run: |
-          mkdir -p fonts
-          cp node_modules/figlet/fonts/*.flf fonts/
-          zip -r fonts.zip fonts/
-
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,4 +40,4 @@ jobs:
           gh release create "$tag" \
             --title "$tag" \
             --generate-notes \
-            main.js manifest.json styles.css fonts.zip
+            main.js manifest.json styles.css

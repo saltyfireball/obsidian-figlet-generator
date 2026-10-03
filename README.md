@@ -239,7 +239,7 @@ Configure plugin behavior in Settings > Figlet Generator:
 
 ## Available Fonts
 
-The plugin ships with 326 fonts from the Figlet font library. Fonts are loaded on-demand to minimize memory usage and automatically unloaded after text generation.
+The plugin ships with 326 fonts from the Figlet font library, bundled inside the plugin so nothing extra needs installing. Fonts are loaded on-demand to minimize memory usage and automatically unloaded after text generation.
 
 Some popular fonts:
 
