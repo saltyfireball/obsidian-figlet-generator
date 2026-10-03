@@ -11,21 +11,24 @@ on:
         required: true
 
 permissions:
-  contents: write
-  id-token: write
-  attestations: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          # Only a tag: a branch name given to workflow_dispatch fails here
+          ref: refs/tags/${{ github.event.inputs.tag || github.ref_name }}
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
 
@@ -36,18 +39,20 @@ jobs:
           npm run build
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-path: |
             main.js
+            manifest.json
             styles.css
 
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          tag="${{ github.event.inputs.tag || github.ref_name }}"
-          gh release create "$tag" \
-            --title "$tag" \
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --verify-tag \
             --generate-notes \
             main.js manifest.json styles.css
