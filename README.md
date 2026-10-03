@@ -158,11 +158,23 @@ Your Text Here
 | `font` | string | Standard | Name of the Figlet font to use (case does not matter) |
 | `color` | string | inherit | A single color, several space/comma-separated colors, or `rainbow`/`gradient` for the palette in settings |
 | `colors` | string | - | Same as `color`; the two are interchangeable |
-| `font-size` | number | 10 | Font size in pixels |
-| `line-height` | number | 1 | Line height multiplier |
-| `centered` | boolean | true | Center the output |
-| `opacity` | number | 1 | Opacity from 0 to 1 |
+| `font-size` | number | settings value (10) | Font size in pixels |
+| `line-height` | number | settings value (1) | Line height multiplier |
+| `centered` | boolean | settings value (true) | Center the output |
+| `opacity` | number | 1 | Opacity from 0 to 1 (`figlet-opacity` is an alias) |
 | `multi-center` | boolean | false | Center each line independently |
+| `load_text` | string | - | `frontmatter` fills `{{frontmatter:key}}` placeholders in the text from the note's frontmatter |
+
+With `load_text: frontmatter`, each `{{frontmatter:key}}` in the text is replaced by that frontmatter value of the note (a string, number or boolean; anything else, or a missing key, becomes empty):
+
+````
+```sfb-figlet
+font: Big
+load_text: frontmatter
+---
+{{frontmatter:title}}
+```
+````
 
 `color` and `colors` accept the same values:
 
@@ -222,9 +234,9 @@ Returns the ASCII art as plain text.
 const ascii = await window.figletAPI.generateText('Hello', 'Banner');
 ```
 
-#### `createHtml(figletText: string, options: FigletHtmlOptions): string`
+#### `createHtml(figletText: string, options?: FigletStyleOptions): string`
 
-Wraps ASCII art from `generateText` in styled HTML. The font is chosen in `generateText`; `createHtml` only styles it.
+Wraps ASCII art from `generateText` in styled HTML. The font is chosen in `generateText`; `createHtml` only styles it. Unlike code blocks, it does not read the plugin's settings: options left out use the fixed defaults (font size 10, line height 1, centered).
 
 ```typescript
 const ascii = await window.figletAPI.generateText("Hello", "Standard");
@@ -246,10 +258,18 @@ console.log(window.figletAPI.defaultGradientColors);
 // ['#FF6188', '#FC9867', '#FFD866', '#A9DC76', '#78DCE8', '#5C7CFA', '#AB9DF2']
 ```
 
-#### `FigletHtmlOptions`
+#### `openModal(app: App, plugin: unknown, editor: Editor): void`
+
+Opens the insert dialog for an editor, as the **Insert figlet ASCII art** command does. The dialog inserts at the editor's cursor or replaces its selection. It always uses Figlet Generator's own settings: `app` and `plugin` are accepted for compatibility and ignored.
 
 ```typescript
-interface FigletHtmlOptions {
+window.figletAPI.openModal(this.app, this, editor);
+```
+
+#### `FigletStyleOptions`
+
+```typescript
+interface FigletStyleOptions {
     color?: string;
     colors?: string[]; // two or more for a gradient
     fontSize?: number;
@@ -300,7 +320,7 @@ Most of `main.js` (about 1.5 MB) is font data, not code. At build time, [`script
 
 ## Making the README media
 
-The screenshots and GIFs in `assets/media/` are captured from the Obsidian app with the plugin installed, by the `obsidian-plugin-showcase` tool (`node src/run.mjs plugins/figlet/scenes.mjs`).
+The screenshots and GIFs in `assets/media/` are captured from the Obsidian app with the plugin installed, by the author's `obsidian-plugin-showcase` tool (a separate, private repository, not part of this plugin). Build this plugin first (`npm run build`) in a checkout next to the showcase checkout, then run `node src/run.mjs plugins/figlet/scenes.mjs` from the showcase checkout and copy its output into `assets/media/`.
 
 ## License
 

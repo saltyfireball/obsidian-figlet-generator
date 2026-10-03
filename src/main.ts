@@ -5,6 +5,7 @@ import {
 	DEFAULT_FIGLET_SETTINGS,
 	DEFAULT_GRADIENT_COLORS,
 	type FigletSettings,
+	type FigletStyleOptions,
 } from "./generator";
 import { FigletModal } from "./modal";
 import { createFigletCodeBlockProcessor } from "./codeblock";
@@ -24,7 +25,7 @@ declare global {
 	interface Window {
 		figletAPI?: {
 			generateText(text: string, font?: string): Promise<string>;
-			createHtml(text: string, options: Record<string, unknown>): string;
+			createHtml(text: string, options?: FigletStyleOptions): string;
 			defaultGradientColors: string[];
 			openModal(app: App, plugin: unknown, editor: unknown): void;
 		};

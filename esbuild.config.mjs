@@ -2,7 +2,7 @@ import esbuild from "esbuild";
 import process from "process";
 import { builtinModules } from "node:module";
 import { readFileSync, writeFileSync } from "node:fs";
-import { figletFontsPlugin } from "./scripts/figlet-fonts-plugin.mjs";
+import { figletFontsDir, figletFontsPlugin } from "./scripts/figlet-fonts-plugin.mjs";
 import { licenseNotices } from "./scripts/license-notices.mjs";
 
 const banner = `/*
@@ -50,7 +50,7 @@ if (prod) {
 	const result = await context.rebuild();
 	// Release builds carry the licenses of the packages bundled into them.
 	// Dev builds skip this: prepending would shift the inline source map.
-	const notices = licenseNotices(Object.keys(result.metafile.inputs));
+	const notices = licenseNotices([...Object.keys(result.metafile.inputs), `${figletFontsDir}/`]);
 	writeFileSync("main.js", notices + readFileSync("main.js", "utf8"));
 	process.exit(0);
 } else {

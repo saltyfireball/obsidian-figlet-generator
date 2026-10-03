@@ -8,6 +8,7 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"test": "node --test test/*.test.mjs",
+		"lint": "eslint src",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [
@@ -32,6 +33,6 @@
 	},
 	"dependencies": {
 		"fflate": "^0.8.3",
-		"figlet": "^1.10.0"
+		"figlet": "^1.12.0"
 	}
 }

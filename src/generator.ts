@@ -24,15 +24,16 @@ function sanitizeColor(color: string): string {
 // (scripts/figlet-fonts-plugin.mjs), so the list and the bundle cannot drift.
 const ALL_FONT_FILES: string[] = fontList;
 
-// Filter to only show "display name" fonts (exclude lowercase/underscore aliases)
-// These are duplicates with nicer formatting
+// Filter to only show "display name" fonts: a font starting with a lowercase
+// letter is hidden when it is an alias of another font differing only in case
 function isDisplayFont(font: string): boolean {
 	const firstChar = font.charAt(0);
 	// Keep fonts starting with uppercase or numbers
 	if (firstChar >= "A" && firstChar <= "Z") return true;
 	if (firstChar >= "0" && firstChar <= "9") return true;
-	// Exclude lowercase aliases (they have uppercase equivalents)
-	return false;
+	// Keep a lowercase font with no other spelling (miniwi)
+	const lower = font.toLowerCase();
+	return !ALL_FONT_FILES.some((f) => f !== font && f.toLowerCase() === lower);
 }
 
 // Fonts shown in the UI (filtered to remove duplicates)
@@ -48,19 +49,19 @@ function resolveFontName(input: string): string {
 	return match ?? input;
 }
 
+/** A bundled font: its data, or why it could not be read. */
+type FontRead = { data: string } | { missing: true } | { error: unknown };
+
 /**
- * Read a font bundled into main.js, or null if it is missing or unreadable
+ * Read a font bundled into main.js, telling a missing font apart from one
+ * that failed to decode
  */
-async function readFont(fontName: string): Promise<string | null> {
+async function readFont(fontName: string): Promise<FontRead> {
 	try {
-		const fontData = await readBundledFont(fontName);
-		if (fontData === null) {
-			console.warn(`Figlet: font "${fontName}" not found, falling back to Standard`);
-		}
-		return fontData;
-	} catch (err) {
-		console.warn(`Figlet: font "${fontName}" failed to load, falling back to Standard`, err);
-		return null;
+		const data = await readBundledFont(fontName);
+		return data === null ? { missing: true } : { data };
+	} catch (error) {
+		return { error };
 	}
 }
 
@@ -152,15 +153,21 @@ export async function generateFigletText(
 	font: string = "Standard",
 ): Promise<string> {
 	font = resolveFontName(font);
-	let fontData = await readFont(font);
-	if (fontData === null) {
+	let read = await readFont(font);
+	if (!("data" in read)) {
+		if ("error" in read) {
+			console.warn(`Figlet: font "${font}" failed to decode, falling back to Standard`, read.error);
+		} else {
+			console.warn(`Figlet: font "${font}" not found, falling back to Standard`);
+		}
 		font = "Standard";
-		fontData = await readFont(font);
-		if (fontData === null) throw new Error("Figlet: the Standard font is missing from the bundle");
+		read = await readFont(font);
+		if ("error" in read) throw new Error("Figlet: the Standard font failed to decode", { cause: read.error });
+		if (!("data" in read)) throw new Error("Figlet: the Standard font is missing from the bundle");
 	}
 
 	try {
-		figletLib.parseFont(font, fontData);
+		figletLib.parseFont(font, read.data);
 		return figletLib.textSync(text, { font });
 	} finally {
 		// Unload fonts after generation to free memory

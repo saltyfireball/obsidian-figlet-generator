@@ -363,6 +363,22 @@
 	margin-top: 8px;
 }
 
+/* ===== Output Mode Toggle ===== */
+
+.fg-figlet-mode-toggle {
+	display: flex;
+	gap: 6px;
+}
+
+.fg-mode-btn.fg-mode-active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.fg-mode-btn.fg-mode-active:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
 /* ===== Modal Actions ===== */
 
 .fg-modal-actions {

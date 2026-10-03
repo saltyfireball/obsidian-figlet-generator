@@ -3,6 +3,9 @@ import { defineConfig } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
+  // The rules are for the plugin's own code; build output, tests and node
+  // scripts are not plugin code
+  { ignores: ["main.js", "node_modules/", "test/", "scripts/", "*.mjs"] },
   ...obsidianmd.configs.recommended,
   {
     files: ["**/*.ts"],
