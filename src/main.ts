@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, App, type Editor } from "obsidian";
+import { Plugin, App, type Editor } from "obsidian";
 import {
 	generateFigletText,
 	createFigletHtml,
@@ -9,7 +9,7 @@ import {
 } from "./generator";
 import { FigletModal } from "./modal";
 import { createFigletCodeBlockProcessor } from "./codeblock";
-import { renderFigletTab } from "./settings-ui";
+import { FigletSettingTab } from "./settings-ui";
 
 interface FigletPluginSettings extends FigletSettings {
 	codeBlockId: string;
@@ -79,20 +79,5 @@ export default class FigletGeneratorPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class FigletSettingTab extends PluginSettingTab {
-	plugin: FigletGeneratorPlugin;
-
-	constructor(app: App, plugin: FigletGeneratorPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display() {
-		const { containerEl } = this;
-		containerEl.empty();
-		renderFigletTab({ plugin: this.plugin, contentEl: containerEl });
 	}
 }

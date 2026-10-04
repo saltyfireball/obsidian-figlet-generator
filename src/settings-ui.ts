@@ -1,163 +1,211 @@
-import { Setting } from "obsidian";
-import type { Plugin } from "obsidian";
+import { PluginSettingTab, SettingPage } from "obsidian";
+import type { App, Plugin, Setting, SettingDefinitionItem } from "obsidian";
 import { AVAILABLE_FONTS, DEFAULT_FAVORITE_FONTS, DEFAULT_GRADIENT_COLORS } from "./generator";
 import type { FigletSettings } from "./generator";
 
-interface FigletPlugin extends Plugin {
-	settings: FigletSettings & { codeBlockId?: string };
+export interface FigletPlugin extends Plugin {
+	settings: FigletSettings & { codeBlockId: string };
 	saveSettings(): Promise<void>;
 }
 
-interface RenderFigletTabArgs {
-	plugin: FigletPlugin;
-	contentEl: HTMLElement;
+/** Split the gradient textarea into colors: any run of whitespace separates them. */
+function parseColorList(value: string): string[] {
+	return value.split(/\s+/).filter((c) => c.length > 0);
 }
 
-export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): void {
-	const existingSection = contentEl.querySelector(".fg-figlet-section");
-	if (existingSection) {
-		existingSection.remove();
+/**
+ * The settings tab, built from Obsidian 1.13's declarative definitions so every
+ * setting appears in Obsidian's settings search. The font picker and the code
+ * block examples are custom pages, reached from entries that are searchable too.
+ */
+export class FigletSettingTab extends PluginSettingTab {
+	plugin: FigletPlugin;
+	private swatchesEl: HTMLElement | null = null;
+
+	constructor(app: App, plugin: FigletPlugin) {
+		super(app, plugin);
+		this.plugin = plugin;
 	}
 
-	const section = contentEl.createDiv("fg-figlet-section");
-	new Setting(section).setName("Figlet generator").setHeading();
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		const settings = this.plugin.settings;
+		return [
+			{
+				type: "group",
+				heading: "Code block",
+				items: [
+					{
+						name: "Code block language ID",
+						desc: "The language identifier for figlet code blocks, such as sfb-figlet. Changing this requires a plugin reload.",
+						control: {
+							type: "text",
+							key: "codeBlockId",
+							placeholder: "sfb-figlet",
+							defaultValue: "sfb-figlet",
+							validate: (value) => (value.trim() ? undefined : "Enter a language ID."),
+						},
+					},
+				],
+			},
+			{
+				type: "group",
+				heading: "Display",
+				items: [
+					{
+						name: "Font size",
+						desc: "Default font size in pixels for figlet output",
+						control: {
+							type: "number",
+							key: "fontSize",
+							defaultValue: 10,
+							min: 1,
+							max: 100,
+							validate: (value) => (value > 0 ? undefined : "Enter a size above 0."),
+						},
+					},
+					{
+						name: "Line height",
+						desc: "Default line height for figlet output (1 = tight, 1.5 = normal)",
+						control: {
+							type: "number",
+							key: "lineHeight",
+							defaultValue: 1,
+							min: 0.5,
+							max: 3,
+							step: 0.1,
+							validate: (value) => (value > 0 ? undefined : "Enter a line height above 0."),
+						},
+					},
+					{
+						name: "Center output",
+						desc: "Center figlet output horizontally",
+						control: { type: "toggle", key: "centered", defaultValue: true },
+					},
+				],
+			},
+			{
+				type: "group",
+				heading: "Rainbow / gradient colors",
+				cls: "fg-figlet-gradient-group",
+				items: [
+					{
+						name: "Preview",
+						desc: "Colors used for 'color: rainbow' or 'color: gradient'. A list of colors in a code block uses its own colors.",
+						searchable: false,
+						render: (setting: Setting) => {
+							this.swatchesEl = setting.controlEl.createDiv("fg-figlet-gradient-preview");
+							this.renderSwatches(settings.gradientColors ?? DEFAULT_GRADIENT_COLORS);
+							return () => {
+								this.swatchesEl = null;
+							};
+						},
+					},
+					{
+						name: "Gradient colors",
+						desc: "Space-separated list of colors for rainbow/gradient mode",
+						aliases: ["rainbow"],
+						control: {
+							type: "textarea",
+							key: "gradientColors",
+							placeholder: "For example: #ff6188 #fc9867 #ffd866",
+							// Three rows: the default seven colors wrap onto a third line
+							rows: 3,
+							validate: (value) => (parseColorList(value).length > 0 ? undefined : "Enter at least one color."),
+						},
+					},
+					{
+						name: "Reset to default colors",
+						action: () => {
+							void this.setControlValue("gradientColors", DEFAULT_GRADIENT_COLORS.join(" ")).then(() => this.update());
+						},
+					},
+				],
+			},
+			{
+				type: "group",
+				heading: "Fonts",
+				items: [
+					{
+						type: "page",
+						name: "Favorite fonts",
+						desc: "Favorites appear at the top of the font list when generating ASCII art.",
+						displayValue: () => `${settings.favoriteFonts?.length ?? 0} favorites`,
+						page: () => new FavoriteFontsPage(this.plugin, () => this.update()),
+					},
+					{
+						type: "page",
+						name: "Code block usage",
+						desc: `Examples and options for ${settings.codeBlockId} code blocks`,
+						page: () => new CodeBlockUsagePage(this.plugin),
+					},
+				],
+			},
+		];
+	}
 
-	// Code Block ID Setting
-	new Setting(section).setName("Code block").setHeading();
+	getControlValue(key: string): unknown {
+		if (key === "gradientColors") {
+			return (this.plugin.settings.gradientColors ?? DEFAULT_GRADIENT_COLORS).join(" ");
+		}
+		return (this.plugin.settings as unknown as Record<string, unknown>)[key];
+	}
 
-	new Setting(section)
-		.setName("Code block language ID")
-		.setDesc("The language identifier for figlet code blocks, such as sfb-figlet. Changing this requires a plugin reload.")
-		.addText((text) => {
-			text
-				.setPlaceholder("Enter block ID")
-				.setValue(plugin.settings.codeBlockId ?? "sfb-figlet")
-				.onChange((value) => {
-					const trimmed = value.trim();
-					if (trimmed.length > 0) {
-						plugin.settings.codeBlockId = trimmed;
-						void plugin.saveSettings();
-					}
-				});
-			text.inputEl.setCssStyles({ width: "200px" });
-		});
+	async setControlValue(key: string, value: unknown): Promise<void> {
+		const settings = this.plugin.settings as unknown as Record<string, unknown>;
+		if (key === "gradientColors" && typeof value === "string") {
+			const colors = parseColorList(value);
+			settings.gradientColors = colors;
+			this.renderSwatches(colors);
+		} else if (key === "codeBlockId" && typeof value === "string") {
+			settings.codeBlockId = value.trim();
+		} else {
+			settings[key] = value;
+		}
+		await this.plugin.saveSettings();
+	}
 
-	// Display Settings Section
-	new Setting(section).setName("Display").setHeading();
+	private renderSwatches(colors: string[]): void {
+		const el = this.swatchesEl;
+		if (!el) return;
+		el.empty();
+		for (const color of colors) {
+			el.createSpan({ cls: "fg-figlet-gradient-swatch" }).setCssStyles({ backgroundColor: color });
+		}
+	}
+}
 
-	new Setting(section)
-		.setName("Font size")
-		.setDesc("Default font size in pixels for figlet output")
-		.addText((text) => {
-			text
-				.setPlaceholder("10")
-				.setValue(String(plugin.settings.fontSize ?? 10))
-				.onChange((value) => {
-					const num = parseFloat(value);
-					if (!isNaN(num) && num > 0) {
-						plugin.settings.fontSize = num;
-						void plugin.saveSettings();
-					}
-				});
-			text.inputEl.type = "number";
-			text.inputEl.min = "1";
-			text.inputEl.max = "100";
-			text.inputEl.setCssStyles({ width: "80px" });
-		});
+/** Pick favorite fonts: search, star or unstar, reset or clear. */
+class FavoriteFontsPage extends SettingPage {
+	constructor(
+		private plugin: FigletPlugin,
+		private onChange: () => void,
+	) {
+		super();
+		this.title = "Favorite fonts";
+	}
 
-	new Setting(section)
-		.setName("Line height")
-		.setDesc("Default line height for figlet output (1 = tight, 1.5 = normal)")
-		.addText((text) => {
-			text
-				.setPlaceholder("1")
-				.setValue(String(plugin.settings.lineHeight ?? 1))
-				.onChange((value) => {
-					const num = parseFloat(value);
-					if (!isNaN(num) && num > 0) {
-						plugin.settings.lineHeight = num;
-						void plugin.saveSettings();
-					}
-				});
-			text.inputEl.type = "number";
-			text.inputEl.min = "0.5";
-			text.inputEl.max = "3";
-			text.inputEl.step = "0.1";
-			text.inputEl.setCssStyles({ width: "80px" });
-		});
+	display(): void {
+		this.containerEl.empty();
+		renderFavoriteFonts(this.containerEl, this.plugin, this.onChange);
+	}
+}
 
-	new Setting(section)
-		.setName("Center output")
-		.setDesc("Center figlet output horizontally")
-		.addToggle((toggle) => {
-			toggle
-				.setValue(plugin.settings.centered ?? true)
-				.onChange((value) => {
-					plugin.settings.centered = value;
-					void plugin.saveSettings();
-				});
-		});
+/** Copyable code block examples and the table of code block options. */
+class CodeBlockUsagePage extends SettingPage {
+	constructor(private plugin: FigletPlugin) {
+		super();
+		this.title = "Code block usage";
+	}
 
-	// Gradient Colors Section
-	new Setting(section).setName("Rainbow / gradient colors").setHeading();
-	section.createEl("p", {
-		text: "Colors used for 'color: rainbow' or 'color: gradient'. A list of colors in a code block uses its own colors.",
-		cls: "fg-hint",
-	});
+	display(): void {
+		this.containerEl.empty();
+		renderCodeBlockUsage(this.containerEl, this.plugin);
+	}
+}
 
-	const gradientColors = plugin.settings.gradientColors ?? DEFAULT_GRADIENT_COLORS;
-
-	// Color preview row
-	const colorPreviewRow = section.createDiv("fg-figlet-gradient-preview");
-
-	const updatePreviewSwatches = (colors: string[]) => {
-		colorPreviewRow.empty();
-		colors.forEach((color) => {
-			const swatch = colorPreviewRow.createSpan({ cls: "fg-figlet-gradient-swatch" });
-			swatch.setCssStyles({ backgroundColor: color });
-		});
-	};
-
-	updatePreviewSwatches(gradientColors);
-
-	let gradientTextArea: HTMLTextAreaElement;
-
-	new Setting(section)
-		.setName("Gradient colors")
-		.setDesc("Space-separated list of colors for rainbow/gradient mode")
-		.addTextArea((text) => {
-			gradientTextArea = text.inputEl;
-			text
-				.setPlaceholder("For example: #ff6188 #fc9867 #ffd866")
-				.setValue(gradientColors.join(" "))
-				.onChange((value) => {
-					const colors = value.split(/\s+/).filter((c) => c.trim().length > 0);
-					if (colors.length > 0) {
-						plugin.settings.gradientColors = colors;
-						void plugin.saveSettings();
-						updatePreviewSwatches(colors);
-					}
-				});
-			// Three rows: the default seven colors wrap onto a third line
-			text.inputEl.rows = 3;
-			text.inputEl.setCssStyles({ width: "100%", fontFamily: "var(--font-monospace)" });
-		});
-
-	const resetGradientBtn = section.createEl("button", {
-		text: "Reset to default colors",
-		cls: "fg-figlet-reset-gradient-btn",
-	});
-	resetGradientBtn.addEventListener("click", () => {
-		plugin.settings.gradientColors = [...DEFAULT_GRADIENT_COLORS];
-		void plugin.saveSettings();
-		gradientTextArea.value = DEFAULT_GRADIENT_COLORS.join(" ");
-		updatePreviewSwatches(DEFAULT_GRADIENT_COLORS);
-	});
-
-	// Code Block Example Section
+function renderCodeBlockUsage(section: HTMLElement, plugin: FigletPlugin): void {
 	const codeBlockId = plugin.settings.codeBlockId ?? "sfb-figlet";
 
-	new Setting(section).setName("Code block usage").setHeading();
 	section.createEl("p", {
 		text: `Use ${codeBlockId} code blocks to render ASCII art inline in your notes:`,
 		cls: "fg-hint",
@@ -203,7 +251,7 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	createCopyableExample(`\`\`\`${codeBlockId}\nfont: Thick\ncolor: rainbow\nmulti-center: true\n---\nLinux\nCommands\n\`\`\``);
 
 	const optionsTable = section.createDiv("fg-figlet-options-table");
-	new Setting(optionsTable).setName("Available options").setHeading();
+	optionsTable.createEl("h3", { text: "Available options" });
 	const table = optionsTable.createEl("table");
 	const headerRow = table.createEl("tr");
 	headerRow.createEl("th", { text: "Option" });
@@ -227,13 +275,13 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		row.createEl("td", { text: desc });
 		row.createEl("td", { text: def, cls: "fg-code" });
 	});
+}
 
-	// Favorites Section
-	new Setting(section).setName("Favorite fonts").setHeading();
-	section.createEl("p", {
-		text: "Favorites appear at the top of the font list when generating ASCII art.",
-		cls: "fg-hint",
-	});
+function renderFavoriteFonts(section: HTMLElement, plugin: FigletPlugin, onChange: () => void): void {
+	const save = () => {
+		void plugin.saveSettings();
+		onChange();
+	};
 
 	const actionsRow = section.createDiv("fg-figlet-actions-row");
 
@@ -243,8 +291,9 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	});
 	resetBtn.addEventListener("click", () => {
 		plugin.settings.favoriteFonts = [...DEFAULT_FAVORITE_FONTS];
-		void plugin.saveSettings();
-		renderFigletTab({ plugin, contentEl });
+		save();
+		updateCount();
+		renderFontList(searchInput.value);
 	});
 
 	const clearBtn = actionsRow.createEl("button", {
@@ -253,8 +302,9 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 	});
 	clearBtn.addEventListener("click", () => {
 		plugin.settings.favoriteFonts = [];
-		void plugin.saveSettings();
-		renderFigletTab({ plugin, contentEl });
+		save();
+		updateCount();
+		renderFontList(searchInput.value);
 	});
 
 	const searchRow = section.createDiv("fg-figlet-search-row");
@@ -273,6 +323,18 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		countEl.textContent = `${favCount} favorites / ${AVAILABLE_FONTS.length} total fonts`;
 	};
 
+	const toggleFavorite = (font: string, isFavorite: boolean) => {
+		const favorites = plugin.settings.favoriteFonts || [];
+		if (isFavorite) {
+			plugin.settings.favoriteFonts = favorites.filter((f) => f !== font);
+		} else if (!favorites.includes(font)) {
+			plugin.settings.favoriteFonts = [...favorites, font];
+		}
+		save();
+		updateCount();
+		renderFontList(searchInput.value);
+	};
+
 	const renderFontList = (filter: string = "") => {
 		fontList.empty();
 		const lowerFilter = filter.toLowerCase();
@@ -288,19 +350,13 @@ export function renderFigletTab({ plugin, contentEl }: RenderFigletTabArgs): voi
 		if (favoriteFonts.length > 0) {
 			const favHeader = fontList.createDiv("fg-figlet-list-header");
 			favHeader.textContent = `Favorites (${favoriteFonts.length})`;
-
-			favoriteFonts.forEach((font) => {
-				createFontItem(fontList, font, true, plugin, searchInput, renderFontList, updateCount);
-			});
+			favoriteFonts.forEach((font) => createFontItem(fontList, font, true, toggleFavorite));
 		}
 
 		if (otherFonts.length > 0) {
 			const otherHeader = fontList.createDiv("fg-figlet-list-header");
 			otherHeader.textContent = `All Fonts (${otherFonts.length})`;
-
-			otherFonts.forEach((font) => {
-				createFontItem(fontList, font, false, plugin, searchInput, renderFontList, updateCount);
-			});
+			otherFonts.forEach((font) => createFontItem(fontList, font, false, toggleFavorite));
 		}
 
 		if (favoriteFonts.length === 0 && otherFonts.length === 0) {
@@ -320,10 +376,7 @@ function createFontItem(
 	container: HTMLElement,
 	font: string,
 	isFavorite: boolean,
-	plugin: FigletPlugin,
-	searchInput: HTMLInputElement,
-	renderFontList: (filter: string) => void,
-	updateCount: () => void,
+	toggleFavorite: (font: string, isFavorite: boolean) => void,
 ): void {
 	const item = container.createDiv("fg-figlet-font-item");
 
@@ -332,20 +385,7 @@ function createFontItem(
 		attr: { type: "button", title: isFavorite ? "Remove from favorites" : "Add to favorites" },
 	});
 	starBtn.textContent = isFavorite ? "(*)" : "( )";
-
-	starBtn.addEventListener("click", () => {
-		const favorites = plugin.settings.favoriteFonts || [];
-		if (isFavorite) {
-			plugin.settings.favoriteFonts = favorites.filter((f) => f !== font);
-		} else {
-			if (!favorites.includes(font)) {
-				plugin.settings.favoriteFonts = [...favorites, font];
-			}
-		}
-		void plugin.saveSettings();
-		updateCount();
-		renderFontList(searchInput.value);
-	});
+	starBtn.addEventListener("click", () => toggleFavorite(font, isFavorite));
 
 	item.createSpan({ text: font, cls: "fg-figlet-font-name" });
 }
