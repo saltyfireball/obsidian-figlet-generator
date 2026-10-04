@@ -283,6 +283,8 @@ interface FigletStyleOptions {
 
 ## Settings
 
+Requires Obsidian 1.13 or later. Every setting here also shows up in Obsidian's settings search.
+
 <p align="center">
   <img src="assets/media/settings.png" width="640" alt="The settings tab: code block language ID, font size, line height, center output, and gradient colors" />
 </p>

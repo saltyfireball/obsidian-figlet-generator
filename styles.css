@@ -359,8 +359,8 @@
 	flex-shrink: 0;
 }
 
-.fg-figlet-reset-gradient-btn {
-	margin-top: 8px;
+.fg-figlet-gradient-group textarea {
+	font-family: var(--font-monospace);
 }
 
 /* ===== Output Mode Toggle ===== */

@@ -2,3 +2,18 @@
 export class App {}
 export class Modal {}
 export class Notice {}
+
+export class PluginSettingTab {
+	constructor(app, plugin) {
+		this.app = app;
+		this.plugin = plugin;
+	}
+
+	update() {}
+}
+
+export class SettingPage {
+	constructor() {
+		this.containerEl = { empty() {} };
+	}
+}
