@@ -220,7 +220,8 @@ function parseRgb(color: string): Rgb | null {
 }
 
 function toHex([r, g, b]: Rgb): string {
-	return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+	const hex = (c: number): string => (c < 16 ? "0" : "") + c.toString(16);
+	return `#${hex(r)}${hex(g)}${hex(b)}`;
 }
 
 /**
@@ -268,7 +269,7 @@ function trimFigletLines(figletText: string): string[] {
 	while (lines.length > 0 && lines[lines.length - 1]?.trim() === "") {
 		lines.pop();
 	}
-	return lines.map((l) => l.trimEnd());
+	return lines.map((l) => l.replace(/\s+$/, ""));
 }
 
 /**
@@ -382,7 +383,7 @@ export function createFigletHtml(
 function toCssStyles(styles: [string, string][]): Partial<CSSStyleDeclaration> {
 	const out: Record<string, string> = {};
 	for (const [k, v] of styles) out[k.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())] = v;
-	return out as Partial<CSSStyleDeclaration>;
+	return out;
 }
 
 /**
