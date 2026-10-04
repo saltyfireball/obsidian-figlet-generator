@@ -16,4 +16,6 @@ export class SettingPage {
 	constructor() {
 		this.containerEl = { empty() {} };
 	}
+
+	hide() {}
 }

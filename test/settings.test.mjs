@@ -65,3 +65,52 @@ test("validators reject empty or non-positive input", () => {
 	assert.ok(byKey.gradientColors.validate("  "));
 	assert.equal(byKey.gradientColors.validate("#f00"), undefined);
 });
+
+function findItem(tab, name) {
+	return tab
+		.getSettingDefinitions()
+		.flatMap((group) => group.items ?? [])
+		.find((item) => item.name === name);
+}
+
+test("Reset to default colors restores the palette, saves and updates the tab", async () => {
+	const { tab, plugin } = makeTab();
+	let updates = 0;
+	tab.update = () => updates++;
+	plugin.settings.gradientColors = ["#000"];
+	findItem(tab, "Reset to default colors").action();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	assert.deepEqual(plugin.settings.gradientColors, generator.DEFAULT_GRADIENT_COLORS);
+	assert.equal(plugin.saves, 1);
+	assert.equal(updates, 1);
+});
+
+test("the Code block usage entry does not show the language ID", () => {
+	const { tab, plugin } = makeTab();
+	const before = findItem(tab, "Code block usage").desc;
+	plugin.settings.codeBlockId = "other-id";
+	assert.equal(findItem(tab, "Code block usage").desc, before);
+	assert.ok(!before.includes("sfb-figlet"));
+});
+
+test("the setting pages open with their titles", () => {
+	const { tab } = makeTab();
+	assert.equal(findItem(tab, "Favorite fonts").page().title, "Favorite fonts");
+	assert.equal(findItem(tab, "Code block usage").page().title, "Code block usage");
+});
+
+test("the favorites page updates the tab when it closes, not before", () => {
+	const { tab } = makeTab();
+	let updates = 0;
+	tab.update = () => updates++;
+	const page = findItem(tab, "Favorite fonts").page();
+	assert.equal(updates, 0);
+	page.hide();
+	assert.equal(updates, 1);
+});
+
+test("the favorites count reflects the current favorites", () => {
+	const { tab, plugin } = makeTab();
+	plugin.settings.favoriteFonts = ["Big", "Slant"];
+	assert.equal(findItem(tab, "Favorite fonts").displayValue(), "2 favorites");
+});

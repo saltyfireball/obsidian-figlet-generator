@@ -135,7 +135,7 @@ export class FigletSettingTab extends PluginSettingTab {
 					{
 						type: "page",
 						name: "Code block usage",
-						desc: `Examples and options for ${settings.codeBlockId} code blocks`,
+						desc: "Copyable examples and the options for figlet code blocks",
 						page: () => new CodeBlockUsagePage(this.plugin),
 					},
 				],
@@ -186,7 +186,13 @@ class FavoriteFontsPage extends SettingPage {
 
 	display(): void {
 		this.containerEl.empty();
-		renderFavoriteFonts(this.containerEl, this.plugin, this.onChange);
+		renderFavoriteFonts(this.containerEl, this.plugin);
+	}
+
+	/** Refresh the tab's "N favorites" value once, when the page closes, not on every click. */
+	hide(): void {
+		super.hide();
+		this.onChange();
 	}
 }
 
@@ -277,10 +283,9 @@ function renderCodeBlockUsage(section: HTMLElement, plugin: FigletPlugin): void 
 	});
 }
 
-function renderFavoriteFonts(section: HTMLElement, plugin: FigletPlugin, onChange: () => void): void {
+function renderFavoriteFonts(section: HTMLElement, plugin: FigletPlugin): void {
 	const save = () => {
 		void plugin.saveSettings();
-		onChange();
 	};
 
 	const actionsRow = section.createDiv("fg-figlet-actions-row");
