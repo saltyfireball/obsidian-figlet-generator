@@ -7,11 +7,13 @@ import fontList from "./font-list.json";
 const CSS_NUMBER = String.raw`[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d+)?%?`;
 const COMMA_CHANNEL = `(${CSS_NUMBER})`;
 const SPACE_CHANNEL = `(${CSS_NUMBER}|none)`;
+// Spaces and tabs only: a color is one line of a code block
+const WS = "[ \\t]";
 // rgb(255, 0, 0) / rgba(255, 0, 0, 0.5), and CSS4 rgb(255 0 0) / rgb(255 0 0 / 50%).
 // Alpha is matched for shape only: it is dropped when blending, and the
 // browser clamps an out-of-range alpha to 0-1 (CSS Color 4)
-const RGB_COMMA = new RegExp(String.raw`^rgba?\(\s*${COMMA_CHANNEL}\s*,\s*${COMMA_CHANNEL}\s*,\s*${COMMA_CHANNEL}\s*(?:,\s*${CSS_NUMBER}\s*)?\)$`, "i");
-const RGB_SPACE = new RegExp(String.raw`^rgba?\(\s*${SPACE_CHANNEL}\s+${SPACE_CHANNEL}\s+${SPACE_CHANNEL}\s*(?:\/\s*(?:${CSS_NUMBER}|none)\s*)?\)$`, "i");
+const RGB_COMMA = new RegExp(String.raw`^rgba?\(${WS}*${COMMA_CHANNEL}${WS}*,${WS}*${COMMA_CHANNEL}${WS}*,${WS}*${COMMA_CHANNEL}${WS}*(?:,${WS}*${CSS_NUMBER}${WS}*)?\)$`, "i");
+const RGB_SPACE = new RegExp(String.raw`^rgba?\(${WS}*${SPACE_CHANNEL}${WS}+${SPACE_CHANNEL}${WS}+${SPACE_CHANNEL}${WS}*(?:\/${WS}*(?:${CSS_NUMBER}|none)${WS}*)?\)$`, "i");
 
 /**
  * Sanitize a CSS color value to prevent injection
@@ -21,8 +23,9 @@ function sanitizeColor(color: string): string {
 	const trimmed = color.trim();
 	// Allow hex colors
 	if (/^#[0-9A-Fa-f]{3,8}$/.test(trimmed)) return trimmed;
-	// Allow rgb/rgba, comma or space separated (with "/ alpha"), in the shapes parseRgb reads
-	if (RGB_COMMA.test(trimmed) || RGB_SPACE.test(trimmed)) return trimmed;
+	// Allow rgb/rgba, comma or space separated (with "/ alpha"), only when
+	// parseRgb reads it: the right shape, with one unit across the channels
+	if (/^rgba?\(/i.test(trimmed) && parseRgb(trimmed)) return trimmed;
 	// Allow hsl/hsla
 	if (/^hsla?\(\s*[\d.,\s%deg]+\)$/i.test(trimmed)) return trimmed;
 	// Allow CSS named colors (basic set) and CSS variables

@@ -16,7 +16,7 @@ const ACCEPTED_INPUTS = {
 	"eight-digit hex": ["#FF0000FF", "#0000FFFF"],
 	"rgb()": ["rgb(255, 0, 0)", "rgb(0, 0, 255)"],
 	"percentage rgb()": ["rgb(100%, 0%, 0%)", "rgb(0%, 0%, 100%)"],
-	// Mixing numbers and percentages is invalid CSS: it bands by design
+	// Mixing numbers and percentages is invalid CSS: the stop renders transparent
 	"mixed rgb() channels": ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"],
 	"named colors": ["red", "blue"],
 	"CSS variables": ["var(--text-accent)", "var(--text-error)"],
@@ -67,13 +67,13 @@ test("a percentage below 1% without a leading zero blends", () => {
 	assert.equal(colors[0], "#010000");
 });
 
-test("mixed number and percentage channels band instead of blending", () => {
+test("mixed number and percentage channels render transparent instead of blending", () => {
 	const colors = spanColors(generator.createFigletHtml(ART, { colors: ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"] }));
-	assert.deepEqual([...new Set(colors)], ["rgb(100%, 0, 0)", "rgb(0, 0, 255)"]);
+	assert.deepEqual([...new Set(colors)], ["transparent", "rgb(0, 0, 255)"]);
 });
 
 test("malformed rgb() is rejected, not passed to the style attribute", () => {
-	for (const bad of ["rgb(1 / 2 / 3)", "rgb(1, 2 3)", "rgb(none, 0, 0)", "rgb(none% 0 0)", "rgb(1 2 3 4)"]) {
+	for (const bad of ["rgb(1 / 2 / 3)", "rgb(1, 2 3)", "rgb(none, 0, 0)", "rgb(none% 0 0)", "rgb(1 2 3 4)", "rgb(1e2 -5 +.5e-1%)", "rgb(1\n2\n3)", "rgb(1,\n2, 3)"]) {
 		const colors = spanColors(generator.createFigletHtml(ART, { colors: [bad, "rgb(0, 0, 255)"] }));
 		assert.ok(!colors.includes(bad), `${bad} reached the style attribute`);
 	}
